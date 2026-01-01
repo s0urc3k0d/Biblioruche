@@ -128,6 +128,25 @@
     </div>
     
     <div class="col-lg-4">
+        <!-- Ebook disponible -->
+        {% if book.ebook and book.ebook.is_visible %}
+        <div class="card mb-3 border-info">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0"><i class="fas fa-tablet-alt"></i> Ebook disponible</h6>
+            </div>
+            <div class="card-body">
+                <p class="mb-2">
+                    <i class="fas fa-file"></i> Format EPUB<br>
+                    <i class="fas fa-weight"></i> {{ book.ebook.get_file_size_display() }}<br>
+                    <i class="fas fa-download"></i> {{ book.ebook.download_count }} téléchargements
+                </p>
+                <a href="{{ url_for('ebooks.ebook_detail', ebook_id=book.ebook.id) }}" class="btn btn-info w-100">
+                    <i class="fas fa-download"></i> Accéder à l'ebook
+                </a>
+            </div>
+        </div>
+        {% endif %}
+        
         <!-- Sessions de lecture -->
         {% if reading_sessions %}
         <div class="card mb-3">

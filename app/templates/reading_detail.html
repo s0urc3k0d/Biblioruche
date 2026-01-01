@@ -94,6 +94,23 @@
                             {% endif %}
                         </div>
                     </div>
+                    
+                    <!-- Lien vers l'ebook si disponible -->
+                    {% if reading.book.ebook and reading.book.ebook.is_visible %}
+                    <div class="mt-4 p-3 bg-info bg-opacity-10 rounded">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h6 class="mb-1 text-info">
+                                    <i class="fas fa-tablet-alt"></i> Ebook disponible !
+                                </h6>
+                                <small class="text-muted">Format EPUB • {{ reading.book.ebook.get_file_size_display() }}</small>
+                            </div>
+                            <a href="{{ url_for('ebooks.ebook_detail', ebook_id=reading.book.ebook.id) }}" class="btn btn-info">
+                                <i class="fas fa-download"></i> Télécharger
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 

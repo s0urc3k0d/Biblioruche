@@ -134,7 +134,14 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <h6 class="card-title text-dark">{{ book.title }}</h6>
-                        <span class="badge {{ badge_class }}">{{ status_text }}</span>
+                        <div class="d-flex gap-1">
+                            {% if book.ebook and book.ebook.is_visible %}
+                            <span class="badge bg-info" title="Ebook disponible">
+                                <i class="fas fa-tablet-alt"></i>
+                            </span>
+                            {% endif %}
+                            <span class="badge {{ badge_class }}">{{ status_text }}</span>
+                        </div>
                     </div>
                     <p class="card-text text-muted">par {{ book.author }}</p>
                     {% if book.publication_year or book.pages_count %}
