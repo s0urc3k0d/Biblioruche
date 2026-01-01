@@ -106,7 +106,7 @@ Module événementiel activable/désactivable par les administrateurs pour organ
 | F5 | **Session de visionnage** | Programmer une séance avec date/heure, film sélectionné | ✅ Terminé |
 | F6 | **Inscription au visionnage** | Les utilisateurs s'inscrivent à la séance | ✅ Terminé |
 | F7 | **Historique des séances** | Archive des films visionnés | ✅ Terminé |
-| F8 | **Badges CinéClub** | Badges spécifiques (Premier film, Cinéphile, etc.) | ⏳ À faire |
+| F8 | **Badges CinéClub** | Badges spécifiques (Premier film, Cinéphile, etc.) | ✅ Terminé |
 | F9 | **Masquage dynamique** | Liens et pages masqués quand le module est désactivé | ✅ Terminé |
 
 #### Modèles de données proposés
@@ -190,21 +190,21 @@ class ViewingParticipation(db.Model):
 
 ### 📊 Statistiques et Analytics
 
-| # | Fonctionnalité | Description | Priorité |
-|---|----------------|-------------|----------|
-| S1 | **Dashboard statistiques public** | Nombre de lectures, participants, livres lus | 🟡 Moyenne |
-| S2 | **Statistiques admin avancées** | Graphiques d'activité, tendances, export CSV | 🟡 Moyenne |
-| S3 | **Classement des lecteurs** | Leaderboard basé sur les participations/badges | 🟢 Basse |
-| S4 | **Statistiques personnelles** | Page "Mes stats" détaillée pour chaque utilisateur | 🟢 Basse |
+| # | Fonctionnalité | Description | Priorité | Status |
+|---|----------------|-------------|----------|--------|
+| S1 | **Dashboard statistiques public** | Nombre de lectures, participants, livres lus | 🟡 Moyenne | ✅ Terminé |
+| S2 | **Statistiques admin avancées** | Graphiques d'activité, tendances, export CSV | 🟡 Moyenne | 🔄 Partiel |
+| S3 | **Classement des lecteurs** | Leaderboard basé sur les participations/badges | 🟢 Basse | ✅ Terminé |
+| S4 | **Statistiques personnelles** | Page "Mes stats" détaillée pour chaque utilisateur | 🟢 Basse | ⏳ À faire |
 
 ### 🔔 Notifications
 
-| # | Fonctionnalité | Description | Priorité |
-|---|----------------|-------------|----------|
-| N1 | **Notifications in-app** | Cloche avec notifications non lues | 🟡 Moyenne |
-| N2 | **Notifications par email** | Optionnel, pour les événements importants | 🟢 Basse |
-| N3 | **Webhooks Discord** | Notifications automatiques sur un serveur Discord | 🟡 Moyenne |
-| N4 | **Rappels de lecture** | Notification X jours avant la fin d'une lecture | 🟢 Basse |
+| # | Fonctionnalité | Description | Priorité | Status |
+|---|----------------|-------------|----------|--------|
+| N1 | **Notifications in-app** | Cloche avec notifications non lues | 🟡 Moyenne | ✅ Terminé |
+| N2 | **Notifications par email** | Optionnel, pour les événements importants | 🟢 Basse | ⏳ À faire |
+| N3 | **Webhooks Discord** | Notifications automatiques sur un serveur Discord | 🟡 Moyenne | ⏳ À faire |
+| N4 | **Rappels de lecture** | Notification X jours avant la fin d'une lecture | 🟢 Basse | ⏳ À faire |
 
 ### 💬 Social et Communauté
 
@@ -217,13 +217,13 @@ class ViewingParticipation(db.Model):
 
 ### 📖 Gestion des livres avancée
 
-| # | Fonctionnalité | Description | Priorité |
-|---|----------------|-------------|----------|
-| L1 | **Intégration API livres** | Auto-complétion via Google Books / Open Library | 🟠 Haute |
-| L2 | **Couvertures automatiques** | Récupération des couvertures via ISBN | 🟠 Haute |
-| L3 | **Liste de lecture personnelle** | "À lire plus tard" pour chaque utilisateur | 🟡 Moyenne |
-| L4 | **Catégories/Tags** | Système de tags pour organiser les livres | 🟡 Moyenne |
-| L5 | **Recherche avancée** | Filtres multiples (genre, année, auteur, note) | 🟡 Moyenne |
+| # | Fonctionnalité | Description | Priorité | Status |
+|---|----------------|-------------|----------|--------|
+| L1 | **Intégration API livres** | Auto-complétion via Google Books / Open Library | 🟠 Haute | ✅ Terminé |
+| L2 | **Couvertures automatiques** | Récupération des couvertures via ISBN | 🟠 Haute | ✅ Terminé |
+| L3 | **Liste de lecture personnelle** | "À lire plus tard" pour chaque utilisateur | 🟡 Moyenne | ⏳ À faire |
+| L4 | **Catégories/Tags** | Système de tags pour organiser les livres | 🟡 Moyenne | ⏳ À faire |
+| L5 | **Recherche avancée** | Filtres multiples (genre, année, auteur, note) | 🟡 Moyenne | ⏳ À faire |
 
 ### 🎮 Gamification avancée
 
@@ -240,41 +240,41 @@ class ViewingParticipation(db.Model):
 
 ### 🗄️ Base de données et Performance
 
-| # | Amélioration | Description | Priorité |
-|---|--------------|-------------|----------|
-| DB1 | **Migration vers Flask-Migrate/Alembic** | Gestion propre des migrations de schéma | 🟠 Haute |
-| DB2 | **Index sur les colonnes fréquentes** | Optimisation des requêtes (status, dates, user_id) | 🟡 Moyenne |
-| DB3 | **Support PostgreSQL** | Configuration pour production avec PostgreSQL | 🟡 Moyenne |
-| DB4 | **Système de cache** | Redis/Flask-Caching pour les pages fréquentes | 🟡 Moyenne |
-| DB5 | **Soft delete** | Marquage "supprimé" au lieu de vraie suppression | 🟢 Basse |
+| # | Amélioration | Description | Priorité | Status |
+|---|--------------|-------------|----------|--------|
+| DB1 | **Migration vers Flask-Migrate/Alembic** | Gestion propre des migrations de schéma | 🟠 Haute | ✅ Terminé |
+| DB2 | **Index sur les colonnes fréquentes** | Optimisation des requêtes (status, dates, user_id) | 🟡 Moyenne | ⏳ À faire |
+| DB3 | **Support PostgreSQL** | Configuration pour production avec PostgreSQL | 🟡 Moyenne | ✅ Terminé |
+| DB4 | **Système de cache** | Redis/Flask-Caching pour les pages fréquentes | 🟡 Moyenne | ⏳ À faire |
+| DB5 | **Soft delete** | Marquage "supprimé" au lieu de vraie suppression | 🟢 Basse | ⏳ À faire |
 
 ### 🧪 Tests et Qualité
 
-| # | Amélioration | Description | Priorité |
-|---|--------------|-------------|----------|
-| T1 | **Tests unitaires** | pytest + couverture des modèles et routes | 🟠 Haute |
-| T2 | **Tests d'intégration** | Tests end-to-end des workflows | 🟡 Moyenne |
-| T3 | **CI/CD Pipeline** | GitHub Actions pour tests automatiques | 🟡 Moyenne |
-| T4 | **Linting automatique** | flake8, black, isort en pre-commit | 🟡 Moyenne |
+| # | Amélioration | Description | Priorité | Status |
+|---|--------------|-------------|----------|--------|
+| T1 | **Tests unitaires** | pytest + couverture des modèles et routes | 🟠 Haute | ✅ Terminé |
+| T2 | **Tests d'intégration** | Tests end-to-end des workflows | 🟡 Moyenne | ⏳ À faire |
+| T3 | **CI/CD Pipeline** | GitHub Actions pour tests automatiques | 🟡 Moyenne | ⏳ À faire |
+| T4 | **Linting automatique** | flake8, black, isort en pre-commit | 🟡 Moyenne | ⏳ À faire |
 
 ### 📡 API et Intégrations
 
-| # | Amélioration | Description | Priorité |
-|---|--------------|-------------|----------|
-| A1 | **API REST** | Endpoints JSON pour intégrations externes | 🟡 Moyenne |
-| A2 | **Documentation API** | Swagger/OpenAPI | 🟢 Basse |
-| A3 | **Webhooks sortants** | Notifier des services externes | 🟢 Basse |
-| A4 | **Bot Twitch** | Intégration avec le chat Twitch | 🟢 Basse |
+| # | Amélioration | Description | Priorité | Status |
+|---|--------------|-------------|----------|--------|
+| A1 | **API REST** | Endpoints JSON pour intégrations externes | 🟡 Moyenne | ✅ Terminé |
+| A2 | **Documentation API** | Swagger/OpenAPI | 🟢 Basse | ⏳ À faire |
+| A3 | **Webhooks sortants** | Notifier des services externes | 🟢 Basse | ⏳ À faire |
+| A4 | **Bot Twitch** | Intégration avec le chat Twitch | 🟢 Basse | ⏳ À faire |
 
 ### 🚀 Déploiement
 
-| # | Amélioration | Description | Priorité |
-|---|--------------|-------------|----------|
-| D1 | **Docker** | Containerisation de l'application | 🟠 Haute |
-| D2 | **docker-compose** | Stack complète (app + db + redis) | 🟠 Haute |
-| D3 | **Variables d'environnement** | Meilleure gestion des secrets | 🟡 Moyenne |
-| D4 | **Health checks** | Endpoints de monitoring | 🟡 Moyenne |
-| D5 | **Logging structuré** | Logs JSON avec niveaux appropriés | 🟡 Moyenne |
+| # | Amélioration | Description | Priorité | Status |
+|---|--------------|-------------|----------|--------|
+| D1 | **Docker** | Containerisation de l'application | 🟠 Haute | ✅ Terminé |
+| D2 | **docker-compose** | Stack complète (app + db + redis) | 🟠 Haute | ✅ Terminé |
+| D3 | **Variables d'environnement** | Meilleure gestion des secrets | 🟡 Moyenne | ✅ Terminé |
+| D4 | **Health checks** | Endpoints de monitoring | 🟡 Moyenne | ✅ Terminé |
+| D5 | **Logging structuré** | Logs JSON avec niveaux appropriés | 🟡 Moyenne | ✅ Terminé |
 
 ---
 
@@ -365,20 +365,30 @@ class ViewingParticipation(db.Model):
 - [x] Système de votes pour films
 - [x] Séances de visionnage avec inscription
 - [x] Interface admin complète
-- [ ] Badges CinéClub (en attente)
+- [x] Badges CinéClub (7 badges)
 
-### Phase 4 - Améliorations techniques (2-3 semaines)
-- [ ] Docker et docker-compose
-- [ ] Flask-Migrate
-- [ ] Tests unitaires de base
-- [ ] Logging structuré
+### Phase 4 - Améliorations techniques (2-3 semaines) ✅ COMPLÉTÉE
+- [x] Docker et docker-compose (dev + prod)
+- [x] Flask-Migrate (Alembic)
+- [x] Tests unitaires pytest (conftest, models, routes, badges)
+- [x] Logging structuré JSON (pythonjsonlogger)
+- [x] Health checks
+- [x] Support PostgreSQL (docker-compose.prod.yml)
 
-### Phase 5 - Fonctionnalités bonus (ongoing)
-- [ ] Intégration API livres
-- [ ] Notifications
-- [ ] Statistiques avancées
-- [ ] Améliorations UX
-- [ ] Badges CinéClub
+### Phase 5 - Fonctionnalités bonus ✅ COMPLÉTÉE
+- [x] Intégration API Open Library (auto-complétion livres)
+- [x] Système de notifications in-app (modèle + API)
+- [x] Page statistiques publique avec Chart.js
+- [x] API REST (/api/books, /api/stats, /api/notifications)
+- [x] Classement des contributeurs
+
+### Phase 6 - Prochaines améliorations (à venir)
+- [ ] CI/CD Pipeline (GitHub Actions)
+- [ ] Webhooks Discord
+- [ ] Interface notifications (cloche UI)
+- [ ] Recherche avancée avec filtres
+- [ ] Headers de sécurité (CSP)
+- [ ] Backup automatique BDD
 
 ---
 
