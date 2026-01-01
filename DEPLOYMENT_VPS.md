@@ -139,7 +139,7 @@ services:
       - SECRET_KEY=${SECRET_KEY}
       - TWITCH_CLIENT_ID=${TWITCH_CLIENT_ID}
       - TWITCH_CLIENT_SECRET=${TWITCH_CLIENT_SECRET}
-      - TWITCH_REDIRECT_URI=https://biblioruche.sourcekod.fr/auth/twitch/callback
+      - TWITCH_REDIRECT_URI=https://biblioruche.sourcekod.fr/auth/callback
       - ADMIN_TWITCH_USERNAMES=${ADMIN_TWITCH_USERNAMES}
     volumes:
       - ./instance:/app/instance
@@ -584,8 +584,8 @@ Après le déploiement, **mettez à jour l'URL de callback** dans la console Twi
 1. Allez sur https://dev.twitch.tv/console/apps
 2. Sélectionnez votre application BiblioRuche
 3. Modifiez l'URL de redirection OAuth :
-   - **Ancienne** : `http://localhost:5000/auth/twitch/callback`
-   - **Nouvelle** : `https://biblioruche.sourcekod.fr/auth/twitch/callback`
+   - **Ancienne** : `http://localhost:5000/auth/callback`
+   - **Nouvelle** : `https://biblioruche.sourcekod.fr/auth/callback`
 
 ---
 
