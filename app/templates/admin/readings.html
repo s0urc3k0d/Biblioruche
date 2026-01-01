@@ -44,23 +44,29 @@
                                        class="btn btn-outline-primary" title="Modifier">
                                         <i class="fas fa-edit"></i> Modifier
                                     </a>
-                                    <a href="{{ url_for('admin.complete_reading', reading_id=reading.id) }}" 
-                                       class="btn btn-success"
-                                       onclick="return confirm('Marquer cette lecture comme terminée ?')">
-                                        <i class="fas fa-check"></i> Terminer
-                                    </a>
+                                    <form action="{{ url_for('admin.complete_reading', reading_id=reading.id) }}" method="POST" class="d-inline">
+                                        {{ csrf_form.csrf_token }}
+                                        <button type="submit" class="btn btn-success"
+                                                onclick="return confirm('Marquer cette lecture comme terminée ?')">
+                                            <i class="fas fa-check"></i> Terminer
+                                        </button>
+                                    </form>
                                 </div>
                                 <div class="btn-group btn-group-sm w-100">
-                                    <a href="{{ url_for('admin.archive_reading', reading_id=reading.id) }}" 
-                                       class="btn btn-secondary"
-                                       onclick="return confirm('Archiver cette lecture ?')">
-                                        <i class="fas fa-archive"></i> Archiver
-                                    </a>
-                                    <a href="{{ url_for('admin.delete_reading', reading_id=reading.id) }}" 
-                                       class="btn btn-outline-danger" title="Supprimer"
-                                       onclick="return confirm('Supprimer définitivement cette lecture ?')">
-                                        <i class="fas fa-trash"></i> Supprimer
-                                    </a>
+                                    <form action="{{ url_for('admin.archive_reading', reading_id=reading.id) }}" method="POST" class="d-inline">
+                                        {{ csrf_form.csrf_token }}
+                                        <button type="submit" class="btn btn-secondary"
+                                                onclick="return confirm('Archiver cette lecture ?')">
+                                            <i class="fas fa-archive"></i> Archiver
+                                        </button>
+                                    </form>
+                                    <form action="{{ url_for('admin.delete_reading', reading_id=reading.id) }}" method="POST" class="d-inline">
+                                        {{ csrf_form.csrf_token }}
+                                        <button type="submit" class="btn btn-outline-danger" title="Supprimer"
+                                                onclick="return confirm('Supprimer définitivement cette lecture ?')">
+                                            <i class="fas fa-trash"></i> Supprimer
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         </div>
@@ -109,18 +115,22 @@
                                        class="btn btn-outline-primary" title="Modifier">
                                         <i class="fas fa-edit"></i> Modifier
                                     </a>
-                                    <a href="{{ url_for('admin.start_reading', reading_id=reading.id) }}" 
-                                       class="btn btn-outline-success" title="Commencer maintenant"
-                                       onclick="return confirm('Commencer cette lecture maintenant ?')">
-                                        <i class="fas fa-play"></i> Commencer
-                                    </a>
+                                    <form action="{{ url_for('admin.start_reading', reading_id=reading.id) }}" method="POST" class="d-inline">
+                                        {{ csrf_form.csrf_token }}
+                                        <button type="submit" class="btn btn-outline-success" title="Commencer maintenant"
+                                                onclick="return confirm('Commencer cette lecture maintenant ?')">
+                                            <i class="fas fa-play"></i> Commencer
+                                        </button>
+                                    </form>
                                 </div>
                                 <div class="btn-group btn-group-sm w-100">
-                                    <a href="{{ url_for('admin.delete_reading', reading_id=reading.id) }}" 
-                                       class="btn btn-outline-danger" title="Supprimer"
-                                       onclick="return confirm('Supprimer définitivement cette lecture ?')">
-                                        <i class="fas fa-trash"></i> Supprimer
-                                    </a>
+                                    <form action="{{ url_for('admin.delete_reading', reading_id=reading.id) }}" method="POST" class="d-inline">
+                                        {{ csrf_form.csrf_token }}
+                                        <button type="submit" class="btn btn-outline-danger" title="Supprimer"
+                                                onclick="return confirm('Supprimer définitivement cette lecture ?')">
+                                            <i class="fas fa-trash"></i> Supprimer
+                                        </button>
+                                    </form>
                                 </div>
                                 <small class="text-muted">
                                     <i class="fas fa-user"></i> Programmé par <a href="{{ url_for('main.user_profile', user_id=reading.creator.id) }}" 

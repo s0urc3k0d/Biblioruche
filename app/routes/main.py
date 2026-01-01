@@ -1,12 +1,19 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
-from app import db
+from app import db, limiter
 from app.models import BookProposal, VotingSession, VoteOption, Vote, ReadingSession, User, BookReview, ReadingParticipation, Badge, UserBadge
 from app.badge_manager import BadgeManager
 from app.forms import BookProposalForm, VoteForm, BookReviewForm
 from datetime import datetime
+import bleach
 
 main_bp = Blueprint('main', __name__)
+
+def sanitize_input(text):
+    """Nettoyer les entrées utilisateur pour éviter les injections XSS"""
+    if text is None:
+        return None
+    return bleach.clean(text, strip=True)
 
 @main_bp.route('/')
 def index():
@@ -25,19 +32,20 @@ def index():
 
 @main_bp.route('/propose-book', methods=['GET', 'POST'])
 @login_required
+@limiter.limit("5 per hour", methods=["POST"])  # Limite à 5 propositions par heure
 def propose_book():
     form = BookProposalForm()
     
     if form.validate_on_submit():
         book_proposal = BookProposal(
-            title=form.title.data,
-            author=form.author.data,
-            description=form.description.data,
-            isbn=form.isbn.data,
-            publisher=form.publisher.data,
+            title=sanitize_input(form.title.data),
+            author=sanitize_input(form.author.data),
+            description=sanitize_input(form.description.data),
+            isbn=sanitize_input(form.isbn.data),
+            publisher=sanitize_input(form.publisher.data),
             publication_year=form.publication_year.data,
             pages_count=form.pages_count.data,
-            genre=form.genre.data,
+            genre=sanitize_input(form.genre.data),
             proposed_by=current_user.id
         )
         db.session.add(book_proposal)
@@ -49,34 +57,51 @@ def propose_book():
             badge_names = [badge.name for badge in awarded_badges]
             flash(f'🏆 Félicitations ! Vous avez gagné le(s) badge(s) : {", ".join(badge_names)}', 'success')
         
-        flash('Votre proposition de livre a été soumise avec succès!', 'success')
+        flash('Votre proposition de livre a été soumise avec succès !', 'success')
         return redirect(url_for('main.index'))
     
     return render_template('propose_book.html', form=form)
 
 @main_bp.route('/books')
 def books():
-    # Livres en attente d'être sélectionnés
-    pending_books = BookProposal.query.filter_by(status='pending').order_by(BookProposal.created_at.desc()).all()
+    page = request.args.get('page', 1, type=int)
+    per_page = 12  # Nombre de livres par page
+    status_filter = request.args.get('status', 'all')
     
-    # Livres approuvés
-    approved_books = BookProposal.query.filter_by(status='approved').order_by(BookProposal.created_at.desc()).all()
+    # Construire la requête de base
+    query = BookProposal.query
     
-    # Livres sélectionnés/en cours
-    selected_books = BookProposal.query.filter(BookProposal.status.in_(['selected', 'in_reading'])).all()
+    if status_filter == 'pending':
+        query = query.filter_by(status='pending')
+    elif status_filter == 'approved':
+        query = query.filter_by(status='approved')
+    elif status_filter == 'selected':
+        query = query.filter(BookProposal.status.in_(['selected', 'in_reading']))
+    elif status_filter == 'completed':
+        query = query.filter_by(status='completed')
+    elif status_filter == 'archived':
+        query = query.filter_by(status='archived')
     
-    # Livres terminés
-    completed_books = BookProposal.query.filter_by(status='completed').order_by(BookProposal.created_at.desc()).all()
+    # Pagination
+    pagination = query.order_by(BookProposal.created_at.desc()).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
     
-    # Livres archivés
-    archived_books = BookProposal.query.filter_by(status='archived').order_by(BookProposal.created_at.desc()).all()
+    # Compter les livres par statut pour les badges
+    counts = {
+        'all': BookProposal.query.count(),
+        'pending': BookProposal.query.filter_by(status='pending').count(),
+        'approved': BookProposal.query.filter_by(status='approved').count(),
+        'selected': BookProposal.query.filter(BookProposal.status.in_(['selected', 'in_reading'])).count(),
+        'completed': BookProposal.query.filter_by(status='completed').count(),
+        'archived': BookProposal.query.filter_by(status='archived').count(),
+    }
     
     return render_template('books.html', 
-                         pending_books=pending_books,
-                         approved_books=approved_books,
-                         selected_books=selected_books,
-                         completed_books=completed_books,
-                         archived_books=archived_books)
+                         pagination=pagination,
+                         books=pagination.items,
+                         current_status=status_filter,
+                         counts=counts)
 
 @main_bp.route('/vote/<int:vote_id>')
 def vote_detail(vote_id):

@@ -1,20 +1,29 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, session
 from flask_login import login_user, logout_user, current_user
-from app import db, login_manager
+from app import db, login_manager, limiter
 from app.models import User
 import requests
 import secrets
 import urllib.parse
+import logging
 
 auth_bp = Blueprint('auth', __name__)
+logger = logging.getLogger(__name__)
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
 @auth_bp.route('/login')
+@limiter.limit("10 per minute")  # Limite les tentatives de connexion
 def login():
     if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    
+    # Vérifier la configuration Twitch
+    if not current_app.config.get('TWITCH_CLIENT_ID') or not current_app.config.get('TWITCH_CLIENT_SECRET'):
+        flash('Configuration Twitch manquante. Veuillez contacter un administrateur.', 'error')
+        logger.error('Configuration Twitch OAuth manquante')
         return redirect(url_for('main.index'))
     
     # Générer un state pour la sécurité OAuth
@@ -32,6 +41,7 @@ def login():
     return redirect(auth_url)
 
 @auth_bp.route('/callback')
+@limiter.limit("10 per minute")
 def callback():
     # Vérifications de base
     received_state = request.args.get('state')
@@ -41,16 +51,19 @@ def callback():
     error = request.args.get('error')
     if error:
         error_description = request.args.get('error_description', 'Aucune description')
-        flash(f'Erreur d\'authentification Twitch: {error_description}', 'error')
+        flash(f'Erreur d\'authentification Twitch : {error_description}', 'error')
+        logger.warning(f'Erreur OAuth Twitch: {error} - {error_description}')
         return redirect(url_for('main.index'))
     
     if not received_state or not stored_state or received_state != stored_state:
-        flash('Erreur de sécurité OAuth.', 'error')
+        flash('Erreur de sécurité OAuth. Veuillez réessayer.', 'error')
+        logger.warning('Erreur de validation du state OAuth')
         return redirect(url_for('main.index'))
     
     code = request.args.get('code')
     if not code:
         flash('Erreur lors de l\'authentification avec Twitch.', 'error')
+        logger.warning('Code OAuth manquant')
         return redirect(url_for('main.index'))
     
     # Échanger le code contre un token d'accès
@@ -62,14 +75,37 @@ def callback():
         'redirect_uri': current_app.config['TWITCH_REDIRECT_URI']
     }
     
-    token_response = requests.post('https://id.twitch.tv/oauth2/token', data=token_data)
-    
-    if token_response.status_code != 200:
-        flash('Erreur lors de l\'obtention du token d\'accès.', 'error')
+    try:
+        token_response = requests.post(
+            'https://id.twitch.tv/oauth2/token', 
+            data=token_data,
+            timeout=10
+        )
+        token_response.raise_for_status()
+    except requests.exceptions.Timeout:
+        flash('Le serveur Twitch met trop de temps à répondre. Veuillez réessayer.', 'error')
+        logger.error('Timeout lors de la requête de token Twitch')
+        return redirect(url_for('main.index'))
+    except requests.exceptions.ConnectionError:
+        flash('Impossible de se connecter à Twitch. Vérifiez votre connexion internet.', 'error')
+        logger.error('Erreur de connexion à Twitch')
+        return redirect(url_for('main.index'))
+    except requests.exceptions.HTTPError as e:
+        flash('Erreur lors de l\'obtention du token d\'accès Twitch.', 'error')
+        logger.error(f'Erreur HTTP Twitch token: {e.response.status_code} - {e.response.text}')
+        return redirect(url_for('main.index'))
+    except requests.exceptions.RequestException as e:
+        flash('Une erreur inattendue s\'est produite avec Twitch.', 'error')
+        logger.error(f'Erreur requête Twitch: {str(e)}')
         return redirect(url_for('main.index'))
     
     token_info = token_response.json()
-    access_token = token_info['access_token']
+    access_token = token_info.get('access_token')
+    
+    if not access_token:
+        flash('Token d\'accès invalide reçu de Twitch.', 'error')
+        logger.error('Token d\'accès manquant dans la réponse Twitch')
+        return redirect(url_for('main.index'))
     
     # Obtenir les informations de l'utilisateur
     headers = {
@@ -77,13 +113,37 @@ def callback():
         'Client-Id': current_app.config['TWITCH_CLIENT_ID']
     }
     
-    user_response = requests.get('https://api.twitch.tv/helix/users', headers=headers)
-    
-    if user_response.status_code != 200:
-        flash('Erreur lors de l\'obtention des informations utilisateur.', 'error')
+    try:
+        user_response = requests.get(
+            'https://api.twitch.tv/helix/users', 
+            headers=headers,
+            timeout=10
+        )
+        user_response.raise_for_status()
+    except requests.exceptions.Timeout:
+        flash('Le serveur Twitch met trop de temps à répondre.', 'error')
+        logger.error('Timeout lors de la requête utilisateur Twitch')
+        return redirect(url_for('main.index'))
+    except requests.exceptions.ConnectionError:
+        flash('Impossible de récupérer vos informations Twitch.', 'error')
+        logger.error('Erreur de connexion API utilisateur Twitch')
+        return redirect(url_for('main.index'))
+    except requests.exceptions.HTTPError as e:
+        flash('Erreur lors de la récupération de vos informations Twitch.', 'error')
+        logger.error(f'Erreur HTTP Twitch user: {e.response.status_code}')
+        return redirect(url_for('main.index'))
+    except requests.exceptions.RequestException as e:
+        flash('Une erreur inattendue s\'est produite.', 'error')
+        logger.error(f'Erreur requête utilisateur Twitch: {str(e)}')
         return redirect(url_for('main.index'))
     
-    user_data = user_response.json()['data'][0]
+    user_data_response = user_response.json()
+    if not user_data_response.get('data'):
+        flash('Aucune donnée utilisateur reçue de Twitch.', 'error')
+        logger.error('Données utilisateur vides de Twitch')
+        return redirect(url_for('main.index'))
+    
+    user_data = user_data_response['data'][0]
     
     # Vérifier si l'utilisateur existe déjà (par twitch_id d'abord, puis par username)
     user = User.query.filter_by(twitch_id=user_data['id']).first()

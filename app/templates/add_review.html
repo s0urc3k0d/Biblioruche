@@ -51,7 +51,7 @@
                     
                     <div class="mb-4">
                         {{ form.comment.label(class="form-label") }}
-                        {{ form.comment(class="form-control", rows="5") }}
+                        {{ form.comment(class="form-control", rows="5", maxlength="1000") }}
                         {% if form.comment.errors %}
                             <div class="text-danger mt-1">
                                 {% for error in form.comment.errors %}
@@ -59,7 +59,7 @@
                                 {% endfor %}
                             </div>
                         {% endif %}
-                        <small class="text-muted">Facultatif - Partagez votre opinion sur ce livre</small>
+                        <small class="text-muted">Facultatif - Partagez votre opinion sur ce livre. <span id="comment-counter">0</span>/1000 caractères</small>
                     </div>
                     
                     <div class="d-flex justify-content-between">
@@ -85,4 +85,20 @@
     margin-left: 0.25rem;
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const commentField = document.getElementById('comment');
+    const counter = document.getElementById('comment-counter');
+    
+    function updateCounter() {
+        counter.textContent = commentField.value.length;
+    }
+    
+    if (commentField) {
+        commentField.addEventListener('input', updateCounter);
+        updateCounter();
+    }
+});
+</script>
 {% endblock %}

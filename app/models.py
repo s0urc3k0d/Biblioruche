@@ -1,7 +1,11 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
-from datetime import datetime
+from datetime import datetime, timezone
 from app import db
+
+def utc_now():
+    """Retourne la date/heure actuelle en UTC"""
+    return datetime.now(timezone.utc)
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -11,7 +15,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120))
     avatar_url = db.Column(db.String(200))
     is_admin = db.Column(db.Boolean, default=False, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.now)
+    created_at = db.Column(db.DateTime, default=utc_now)
     
     # Relations
     book_proposals = db.relationship('BookProposal', backref='proposer', lazy=True)
@@ -69,7 +73,7 @@ class BookProposal(db.Model):
     genre = db.Column(db.String(100))
     proposed_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     status = db.Column(db.String(20), default='pending', nullable=False)  # pending, in_vote, selected, archived
-    created_at = db.Column(db.DateTime, default=datetime.now)
+    created_at = db.Column(db.DateTime, default=utc_now)
     
     def get_average_rating(self):
         """Calculate average rating from all reviews"""
@@ -104,7 +108,7 @@ class ReadingSession(db.Model):
     status = db.Column(db.String(20), default='upcoming', nullable=False)  # upcoming, current, completed, archived
     description = db.Column(db.Text)
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.now)
+    created_at = db.Column(db.DateTime, default=utc_now)
     
     # Relations
     book = db.relationship('BookProposal', backref='reading_sessions')
@@ -125,7 +129,7 @@ class ReadingParticipation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     reading_session_id = db.Column(db.Integer, db.ForeignKey('reading_session.id'), nullable=False)
-    joined_at = db.Column(db.DateTime, default=datetime.now)
+    joined_at = db.Column(db.DateTime, default=utc_now)
     
     # Relations
     user = db.relationship('User', backref='reading_participations')
@@ -141,7 +145,7 @@ class VotingSession(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
-    start_date = db.Column(db.DateTime, default=datetime.now)
+    start_date = db.Column(db.DateTime, default=utc_now)
     end_date = db.Column(db.DateTime, nullable=False)
     status = db.Column(db.String(20), default='active', nullable=False)  # active, closed
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -172,7 +176,7 @@ class Vote(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     voting_session_id = db.Column(db.Integer, db.ForeignKey('voting_session.id'), nullable=False)
     vote_option_id = db.Column(db.Integer, db.ForeignKey('vote_option.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.now)
+    created_at = db.Column(db.DateTime, default=utc_now)
     
     # Relations
     vote_option = db.relationship('VoteOption')
@@ -185,8 +189,8 @@ class BookReview(db.Model):
     comment = db.Column(db.Text)
     is_moderated = db.Column(db.Boolean, default=False, nullable=False)  # For admin moderation
     is_visible = db.Column(db.Boolean, default=True, nullable=False)  # Can be hidden by admin
-    created_at = db.Column(db.DateTime, default=datetime.now)
-    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    created_at = db.Column(db.DateTime, default=utc_now)
+    updated_at = db.Column(db.DateTime, default=utc_now, onupdate=utc_now)
     
     # Relations
     user = db.relationship('User', backref='reviews')
@@ -213,7 +217,7 @@ class UserBadge(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     badge_id = db.Column(db.Integer, db.ForeignKey('badge.id'), nullable=False)
-    earned_at = db.Column(db.DateTime, default=datetime.now)
+    earned_at = db.Column(db.DateTime, default=utc_now)
     
     # Relations
     user = db.relationship('User', backref='user_badges')

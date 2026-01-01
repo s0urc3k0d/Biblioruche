@@ -95,16 +95,19 @@
                                 <td>
                                     <div class="btn-group btn-group-sm">
                                         {% if user.id != current_user.id %}
-                                        <a href="{{ url_for('admin.toggle_admin', user_id=user.id) }}" 
-                                           class="btn btn-outline-{% if user.is_admin %}warning{% else %}primary{% endif %}"
-                                           onclick="return confirm('{% if user.is_admin %}Retirer les droits administrateur à{% else %}Donner les droits administrateur à{% endif %} {{ user.display_name }} ?')"
-                                           title="{% if user.is_admin %}Retirer admin{% else %}Promouvoir admin{% endif %}">
-                                            {% if user.is_admin %}
-                                            <i class="fas fa-user-minus"></i>
-                                            {% else %}
-                                            <i class="fas fa-user-plus"></i>
-                                            {% endif %}
-                                        </a>
+                                        <form action="{{ url_for('admin.toggle_admin', user_id=user.id) }}" method="POST" class="d-inline">
+                                            {{ csrf_form.csrf_token }}
+                                            <button type="submit" 
+                                                    class="btn btn-outline-{% if user.is_admin %}warning{% else %}primary{% endif %}"
+                                                    onclick="return confirm('{% if user.is_admin %}Retirer les droits administrateur à{% else %}Donner les droits administrateur à{% endif %} {{ user.display_name }} ?')"
+                                                    title="{% if user.is_admin %}Retirer admin{% else %}Promouvoir admin{% endif %}">
+                                                {% if user.is_admin %}
+                                                <i class="fas fa-user-minus"></i>
+                                                {% else %}
+                                                <i class="fas fa-user-plus"></i>
+                                                {% endif %}
+                                            </button>
+                                        </form>
                                         {% else %}
                                         <span class="btn btn-outline-secondary btn-sm disabled">
                                             <i class="fas fa-user-shield"></i> Vous

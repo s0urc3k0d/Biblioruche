@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
+from flask_wtf import FlaskForm
 from functools import wraps
 from app import db
 from app.models import BookProposal, VotingSession, VoteOption, Vote, ReadingSession, User, BookReview
@@ -7,6 +8,10 @@ from app.forms import ReadingSessionForm, VotingSessionForm, ModerateReviewForm
 from datetime import datetime
 
 admin_bp = Blueprint('admin', __name__)
+
+# Formulaire vide pour les tokens CSRF
+class CSRFForm(FlaskForm):
+    pass
 
 def admin_required(f):
     @wraps(f)
@@ -49,13 +54,12 @@ def dashboard():
 @login_required
 @admin_required
 def proposals():
-    from flask_wtf import FlaskForm
     status_filter = request.args.get('status', 'pending')
     proposals = BookProposal.query.filter_by(status=status_filter).order_by(BookProposal.created_at.desc()).all()
-    form = FlaskForm()  # Formulaire vide pour le token CSRF
-    return render_template('admin/proposals.html', proposals=proposals, current_status=status_filter, form=form)
+    csrf_form = CSRFForm()  # Formulaire pour le token CSRF
+    return render_template('admin/proposals.html', proposals=proposals, current_status=status_filter, form=csrf_form)
 
-@admin_bp.route('/proposal/<int:proposal_id>/approve')
+@admin_bp.route('/proposal/<int:proposal_id>/approve', methods=['POST'])
 @login_required
 @admin_required
 def approve_proposal(proposal_id):
@@ -65,7 +69,7 @@ def approve_proposal(proposal_id):
     flash(f'La proposition "{proposal.title}" a été approuvée.', 'success')
     return redirect(url_for('admin.proposals'))
 
-@admin_bp.route('/proposal/<int:proposal_id>/reject')
+@admin_bp.route('/proposal/<int:proposal_id>/reject', methods=['POST'])
 @login_required
 @admin_required
 def reject_proposal(proposal_id):
@@ -177,8 +181,9 @@ def create_vote():
 def votes():
     active_votes = VotingSession.query.filter_by(status='active').all()
     closed_votes = VotingSession.query.filter_by(status='closed').order_by(VotingSession.end_date.desc()).all()
+    csrf_form = CSRFForm()  # Formulaire pour le token CSRF
     
-    return render_template('admin/votes.html', active_votes=active_votes, closed_votes=closed_votes)
+    return render_template('admin/votes.html', active_votes=active_votes, closed_votes=closed_votes, csrf_form=csrf_form)
 
 @admin_bp.route('/vote/<int:vote_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -210,7 +215,7 @@ def edit_vote(vote_id):
     
     return render_template('admin/edit_vote.html', form=form, voting_session=voting_session)
 
-@admin_bp.route('/vote/<int:vote_id>/close')
+@admin_bp.route('/vote/<int:vote_id>/close', methods=['POST'])
 @login_required
 @admin_required
 def close_vote(vote_id):
@@ -312,14 +317,16 @@ def readings():
     upcoming_readings = ReadingSession.query.filter_by(status='upcoming').order_by(ReadingSession.start_date.asc()).all()
     completed_readings = ReadingSession.query.filter_by(status='completed').order_by(ReadingSession.end_date.desc()).all()
     archived_readings = ReadingSession.query.filter_by(status='archived').order_by(ReadingSession.end_date.desc()).all()
+    csrf_form = CSRFForm()  # Formulaire pour le token CSRF
     
     return render_template('admin/readings.html',
                          current_readings=current_readings,
                          upcoming_readings=upcoming_readings,
                          completed_readings=completed_readings,
-                         archived_readings=archived_readings)
+                         archived_readings=archived_readings,
+                         csrf_form=csrf_form)
 
-@admin_bp.route('/reading/<int:reading_id>/complete')
+@admin_bp.route('/reading/<int:reading_id>/complete', methods=['POST'])
 @login_required
 @admin_required
 def complete_reading(reading_id):
@@ -334,7 +341,7 @@ def complete_reading(reading_id):
     flash('La session de lecture a été marquée comme terminée.', 'success')
     return redirect(url_for('admin.readings'))
 
-@admin_bp.route('/reading/<int:reading_id>/archive')
+@admin_bp.route('/reading/<int:reading_id>/archive', methods=['POST'])
 @login_required
 @admin_required
 def archive_reading(reading_id):
@@ -354,9 +361,10 @@ def archive_reading(reading_id):
 @admin_required
 def users():
     users = User.query.order_by(User.created_at.desc()).all()
-    return render_template('admin/users.html', users=users)
+    csrf_form = CSRFForm()  # Formulaire pour le token CSRF
+    return render_template('admin/users.html', users=users, csrf_form=csrf_form)
 
-@admin_bp.route('/user/<int:user_id>/toggle-admin')
+@admin_bp.route('/user/<int:user_id>/toggle-admin', methods=['POST'])
 @login_required
 @admin_required
 def toggle_admin(user_id):
@@ -440,7 +448,7 @@ def update_all_reading_statuses():
     flash(f'{updated_count} session(s) de lecture mise(s) à jour.', 'success')
     return redirect(url_for('admin.readings'))
 
-@admin_bp.route('/reading/<int:reading_id>/start')
+@admin_bp.route('/reading/<int:reading_id>/start', methods=['POST'])
 @login_required
 @admin_required
 def start_reading(reading_id):
@@ -459,7 +467,7 @@ def start_reading(reading_id):
     flash('La lecture a été démarrée.', 'success')
     return redirect(url_for('admin.readings'))
 
-@admin_bp.route('/reading/<int:reading_id>/delete')
+@admin_bp.route('/reading/<int:reading_id>/delete', methods=['POST'])
 @login_required
 @admin_required
 def delete_reading(reading_id):
@@ -475,7 +483,7 @@ def delete_reading(reading_id):
     flash('La session de lecture a été supprimée.', 'success')
     return redirect(url_for('admin.readings'))
 
-@admin_bp.route('/cleanup-database')
+@admin_bp.route('/cleanup-database', methods=['POST'])
 @login_required
 @admin_required
 def cleanup_database():

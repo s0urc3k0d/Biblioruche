@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Page non trouvée - BiblioRuche{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="mb-4">
+                <i class="fas fa-book-dead fa-5x text-muted"></i>
+            </div>
+            <h1 class="display-4 text-muted">404</h1>
+            <h2 class="mb-4">Page non trouvée</h2>
+            <p class="lead text-muted mb-4">
+                Oups ! La page que vous recherchez semble avoir été empruntée et jamais rendue...
+            </p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="{{ url_for('main.index') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-home"></i> Retour à l'accueil
+                </a>
+                <a href="{{ url_for('main.books') }}" class="btn btn-outline-secondary btn-lg">
+                    <i class="fas fa-book"></i> Voir les livres
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

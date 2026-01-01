@@ -104,14 +104,20 @@
             {% if proposal.status == 'pending' %}
             <div class="card-footer bg-transparent">
                 <div class="d-flex justify-content-between">
-                    <a href="{{ url_for('admin.approve_proposal', proposal_id=proposal.id) }}" 
-                       class="btn btn-success btn-sm" onclick="return confirm('Approuver cette proposition ?')">
-                        <i class="fas fa-check"></i> Approuver
-                    </a>
-                    <a href="{{ url_for('admin.reject_proposal', proposal_id=proposal.id) }}" 
-                       class="btn btn-danger btn-sm" onclick="return confirm('Rejeter cette proposition ?')">
-                        <i class="fas fa-times"></i> Rejeter
-                    </a>
+                    <form action="{{ url_for('admin.approve_proposal', proposal_id=proposal.id) }}" method="POST" class="d-inline">
+                        {{ form.csrf_token }}
+                        <button type="submit" class="btn btn-success btn-sm" 
+                                onclick="return confirm('Approuver cette proposition ?')">
+                            <i class="fas fa-check"></i> Approuver
+                        </button>
+                    </form>
+                    <form action="{{ url_for('admin.reject_proposal', proposal_id=proposal.id) }}" method="POST" class="d-inline">
+                        {{ form.csrf_token }}
+                        <button type="submit" class="btn btn-danger btn-sm" 
+                                onclick="return confirm('Rejeter cette proposition ?')">
+                            <i class="fas fa-times"></i> Rejeter
+                        </button>
+                    </form>
                 </div>
             </div>
             {% endif %}

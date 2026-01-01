@@ -80,7 +80,7 @@
                     
                     <div class="mb-3">
                         {{ form.description.label(class="form-label") }}
-                        {{ form.description(class="form-control", rows="4") }}
+                        {{ form.description(class="form-control", rows="4", maxlength="1000") }}
                         {% if form.description.errors %}
                             <div class="text-danger">
                                 {% for error in form.description.errors %}
@@ -88,7 +88,7 @@
                                 {% endfor %}
                             </div>
                         {% endif %}
-                        <small class="text-muted">Décrivez brièvement le livre et pourquoi vous le recommandez.</small>
+                        <small class="text-muted">Décrivez brièvement le livre et pourquoi vous le recommandez. <span id="desc-counter">0</span>/1000 caractères</small>
                     </div>
                     
                     <div class="row">
@@ -294,6 +294,21 @@ document.addEventListener('DOMContentLoaded', function() {
             searchBtn.click();
         }
     });
+    
+    // Compteur de caractères pour la description
+    const descField = document.getElementById('description');
+    const descCounter = document.getElementById('desc-counter');
+    
+    function updateDescCounter() {
+        if (descField && descCounter) {
+            descCounter.textContent = descField.value.length;
+        }
+    }
+    
+    if (descField) {
+        descField.addEventListener('input', updateDescCounter);
+        updateDescCounter();
+    }
 });
 </script>
 
