@@ -140,6 +140,7 @@ services:
       - TWITCH_CLIENT_ID=${TWITCH_CLIENT_ID}
       - TWITCH_CLIENT_SECRET=${TWITCH_CLIENT_SECRET}
       - TWITCH_REDIRECT_URI=https://biblioruche.sourcekod.fr/auth/twitch/callback
+      - ADMIN_TWITCH_USERNAMES=${ADMIN_TWITCH_USERNAMES}
     volumes:
       - ./instance:/app/instance
     networks:
@@ -167,6 +168,10 @@ SECRET_KEY=VOTRE_CLE_SECRETE_TRES_LONGUE_ET_ALEATOIRE
 # Configuration Twitch OAuth
 TWITCH_CLIENT_ID=votre_client_id_twitch
 TWITCH_CLIENT_SECRET=votre_client_secret_twitch
+
+# Administrateurs Twitch (noms d'utilisateurs séparés par des virgules)
+# Ces utilisateurs auront automatiquement les droits admin lors de leur connexion
+ADMIN_TWITCH_USERNAMES=lantredesilver,wenyn
 EOF
 ```
 
@@ -174,6 +179,8 @@ EOF
 ```bash
 python3 -c "import secrets; print(secrets.token_hex(32))"
 ```
+
+> 📝 **Note sur les admins** : Si vous ne définissez pas `ADMIN_TWITCH_USERNAMES`, les valeurs par défaut (`lantredesilver,wenyn`) seront utilisées. Modifiez cette liste selon vos besoins.
 
 ### 3.4 Créer le dossier instance (pour la BDD SQLite)
 
