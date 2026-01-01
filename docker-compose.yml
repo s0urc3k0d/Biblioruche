@@ -24,8 +24,8 @@ services:
       - TWITCH_REDIRECT_URI=${TWITCH_REDIRECT_URI:-http://localhost:5000/auth/callback}
       - ADMIN_TWITCH_USERNAMES=${ADMIN_TWITCH_USERNAMES:-lantredesilver,wenyn}
     volumes:
-      # Persistance de la base SQLite et des fichiers uploadés
-      - biblioruche-data:/app/instance
+      # Montage du dossier instance local (conserve la base SQLite existante)
+      - ./instance:/app/instance
       # En dev, montage du code pour hot-reload
       - ./app:/app/app:ro
     networks:
@@ -89,12 +89,14 @@ services:
   #     - biblioruche-network
 
 volumes:
-  biblioruche-data:
-    name: biblioruche-data
+  # Volume Docker désactivé - on utilise le montage local ./instance
+  # biblioruche-data:
+  #   name: biblioruche-data
   # postgres-data:
   #   name: biblioruche-postgres
   # redis-data:
   #   name: biblioruche-redis
+  {}
 
 networks:
   biblioruche-network:
