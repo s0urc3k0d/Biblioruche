@@ -427,3 +427,144 @@ def user_profile(user_id):
 def my_profile():
     """Rediriger vers le profil de l'utilisateur connecté"""
     return redirect(url_for('main.user_profile', user_id=current_user.id))
+
+
+@main_bp.route('/stats')
+def statistics():
+    """Page des statistiques publiques"""
+    from sqlalchemy import func
+    from datetime import datetime, timedelta
+    
+    # Stats générales
+    stats = {
+        'users': {
+            'total': User.query.count(),
+            'active': User.query.filter(User.created_at >= datetime.utcnow() - timedelta(days=30)).count()
+        },
+        'books': {
+            'total': BookProposal.query.count(),
+            'approved': BookProposal.query.filter_by(status='approved').count(),
+            'pending': BookProposal.query.filter_by(status='pending').count(),
+            'completed': BookProposal.query.filter_by(status='completed').count()
+        },
+        'readings': {
+            'total': ReadingSession.query.count(),
+            'in_progress': ReadingSession.query.filter_by(status='current').count(),
+            'completed': ReadingSession.query.filter_by(status='completed').count()
+        },
+        'badges': {
+            'total': Badge.query.count(),
+            'awarded': UserBadge.query.count()
+        }
+    }
+    
+    # Stats des livres pour le graphique
+    book_stats = {
+        'approved': stats['books']['approved'],
+        'pending': stats['books']['pending'],
+        'reading': ReadingSession.query.filter_by(status='current').count(),
+        'completed': stats['books']['completed']
+    }
+    
+    # Activité mensuelle (6 derniers mois)
+    months = []
+    proposals_data = []
+    participations_data = []
+    
+    for i in range(5, -1, -1):
+        month_start = datetime.utcnow().replace(day=1) - timedelta(days=i*30)
+        month_end = month_start + timedelta(days=30)
+        
+        month_name = month_start.strftime('%b')
+        months.append(month_name)
+        
+        proposals_count = BookProposal.query.filter(
+            BookProposal.created_at >= month_start,
+            BookProposal.created_at < month_end
+        ).count()
+        proposals_data.append(proposals_count)
+        
+        participations_count = ReadingParticipation.query.filter(
+            ReadingParticipation.joined_at >= month_start,
+            ReadingParticipation.joined_at < month_end
+        ).count()
+        participations_data.append(participations_count)
+    
+    activity_data = {
+        'labels': months,
+        'proposals': proposals_data,
+        'participations': participations_data
+    }
+    
+    # Top contributeurs
+    top_contributors = db.session.query(
+        User,
+        (func.count(BookProposal.id) * 10 + 
+         func.count(Vote.id) * 2 +
+         func.count(ReadingParticipation.id) * 5).label('contribution_score')
+    ).outerjoin(
+        BookProposal, User.id == BookProposal.proposed_by
+    ).outerjoin(
+        Vote, User.id == Vote.user_id
+    ).outerjoin(
+        ReadingParticipation, User.id == ReadingParticipation.user_id
+    ).group_by(User.id).order_by(
+        db.desc('contribution_score')
+    ).limit(10).all()
+    
+    # Ajouter le score au user pour le template
+    top_contributors_with_scores = []
+    for user, score in top_contributors:
+        user.contribution_score = score
+        top_contributors_with_scores.append(user)
+    
+    # Genres populaires
+    genre_stats = db.session.query(
+        BookProposal.genre,
+        func.count(BookProposal.id).label('count')
+    ).filter(
+        BookProposal.genre != None,
+        BookProposal.genre != ''
+    ).group_by(BookProposal.genre).order_by(
+        db.desc('count')
+    ).limit(6).all()
+    
+    max_genre_count = genre_stats[0][1] if genre_stats else 1
+    popular_genres = [
+        {
+            'name': genre or 'Non classé',
+            'count': count,
+            'percentage': int((count / max_genre_count) * 100)
+        }
+        for genre, count in genre_stats
+    ]
+    
+    # Badges les plus rares
+    total_users = User.query.count() or 1
+    badge_stats = db.session.query(
+        Badge,
+        func.count(UserBadge.id).label('owners_count')
+    ).outerjoin(
+        UserBadge, Badge.id == UserBadge.badge_id
+    ).group_by(Badge.id).order_by(
+        'owners_count'
+    ).limit(6).all()
+    
+    rare_badges = [
+        {
+            'name': badge.name,
+            'icon': badge.icon,
+            'color': badge.color or '#FFD700',
+            'owners_count': count,
+            'rarity': round((count / total_users) * 100, 1)
+        }
+        for badge, count in badge_stats
+    ]
+    
+    return render_template('stats.html',
+                         stats=stats,
+                         book_stats=book_stats,
+                         activity_data=activity_data,
+                         top_contributors=top_contributors_with_scores,
+                         popular_genres=popular_genres,
+                         rare_badges=rare_badges)

@@ -1,0 +1,384 @@
+{% extends "base.html" %}
+
+{% block title %}Statistiques - BiblioRuche{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        background: linear-gradient(135deg, var(--card-bg) 0%, var(--bg-secondary) 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stat-number {
+        font-size: 3rem;
+        font-weight: bold;
+        background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .stat-label {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .chart-container {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .chart-title {
+        font-size: 1.2rem;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .leaderboard {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .leaderboard-item {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem;
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+        background: var(--bg-secondary);
+        transition: background 0.2s;
+    }
+    
+    .leaderboard-item:hover {
+        background: var(--bg-tertiary);
+    }
+    
+    .leaderboard-rank {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 1rem;
+    }
+    
+    .rank-1 { background: linear-gradient(135deg, #FFD700, #FFA500); color: #000; }
+    .rank-2 { background: linear-gradient(135deg, #C0C0C0, #A0A0A0); color: #000; }
+    .rank-3 { background: linear-gradient(135deg, #CD7F32, #8B4513); color: #fff; }
+    .rank-default { background: var(--primary-color); color: #fff; }
+    
+    .leaderboard-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin-right: 0.75rem;
+    }
+    
+    .leaderboard-name {
+        flex: 1;
+        font-weight: 500;
+    }
+    
+    .leaderboard-score {
+        font-weight: bold;
+        color: var(--accent-color);
+    }
+    
+    .progress-bar-container {
+        background: var(--bg-secondary);
+        border-radius: 10px;
+        height: 20px;
+        overflow: hidden;
+        margin-bottom: 0.5rem;
+    }
+    
+    .progress-bar {
+        height: 100%;
+        border-radius: 10px;
+        transition: width 0.5s ease-out;
+    }
+    
+    .progress-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">
+        <i class="fas fa-chart-bar me-2"></i>
+        Statistiques BiblioRuche
+    </h1>
+    
+    <!-- Stats générales -->
+    <div class="row">
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card text-center">
+                <div class="stat-number" id="stat-users">{{ stats.users.total }}</div>
+                <div class="stat-label">
+                    <i class="fas fa-users me-1"></i>Membres
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card text-center">
+                <div class="stat-number" id="stat-books">{{ stats.books.total }}</div>
+                <div class="stat-label">
+                    <i class="fas fa-book me-1"></i>Livres
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card text-center">
+                <div class="stat-number" id="stat-readings">{{ stats.readings.completed }}</div>
+                <div class="stat-label">
+                    <i class="fas fa-book-reader me-1"></i>Lectures terminées
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card text-center">
+                <div class="stat-number" id="stat-badges">{{ stats.badges.awarded }}</div>
+                <div class="stat-label">
+                    <i class="fas fa-medal me-1"></i>Badges décernés
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <!-- Répartition des statuts de livres -->
+        <div class="col-lg-6">
+            <div class="chart-container">
+                <h3 class="chart-title">
+                    <i class="fas fa-pie-chart"></i>
+                    Répartition des livres
+                </h3>
+                <canvas id="booksStatusChart" height="250"></canvas>
+            </div>
+        </div>
+        
+        <!-- Activité mensuelle -->
+        <div class="col-lg-6">
+            <div class="chart-container">
+                <h3 class="chart-title">
+                    <i class="fas fa-chart-line"></i>
+                    Activité mensuelle
+                </h3>
+                <canvas id="activityChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <!-- Top contributeurs -->
+        <div class="col-lg-6">
+            <div class="chart-container">
+                <h3 class="chart-title">
+                    <i class="fas fa-trophy"></i>
+                    Top Contributeurs
+                </h3>
+                <ul class="leaderboard">
+                    {% for user in top_contributors %}
+                    <li class="leaderboard-item">
+                        <span class="leaderboard-rank {% if loop.index == 1 %}rank-1{% elif loop.index == 2 %}rank-2{% elif loop.index == 3 %}rank-3{% else %}rank-default{% endif %}">
+                            {{ loop.index }}
+                        </span>
+                        <img src="{{ user.avatar_url or '/static/images/default-avatar.png' }}" 
+                             alt="{{ user.username }}" 
+                             class="leaderboard-avatar">
+                        <span class="leaderboard-name">
+                            <a href="{{ url_for('main.user_profile', user_id=user.id) }}">
+                                {{ user.display_name }}
+                            </a>
+                        </span>
+                        <span class="leaderboard-score">
+                            {{ user.contribution_score }} pts
+                        </span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Genres les plus populaires -->
+        <div class="col-lg-6">
+            <div class="chart-container">
+                <h3 class="chart-title">
+                    <i class="fas fa-tags"></i>
+                    Genres populaires
+                </h3>
+                {% for genre in popular_genres %}
+                <div class="mb-3">
+                    <div class="progress-label">
+                        <span>{{ genre.name }}</span>
+                        <span>{{ genre.count }} livres</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" 
+                             style="width: {{ genre.percentage }}%; background: linear-gradient(90deg, var(--primary-color), var(--accent-color));">
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Badges les plus rares -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="chart-container">
+                <h3 class="chart-title">
+                    <i class="fas fa-gem"></i>
+                    Badges les plus rares
+                </h3>
+                <div class="row">
+                    {% for badge in rare_badges %}
+                    <div class="col-md-4 col-sm-6 mb-3">
+                        <div class="d-flex align-items-center p-3 rounded" 
+                             style="background: var(--bg-secondary);">
+                            <i class="fas {{ badge.icon }} fa-2x me-3" 
+                               style="color: {{ badge.color }};"></i>
+                            <div>
+                                <div class="fw-bold">{{ badge.name }}</div>
+                                <small class="text-muted">
+                                    {{ badge.owners_count }} membre{% if badge.owners_count > 1 %}s{% endif %}
+                                    ({{ badge.rarity }}%)
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Données passées par Flask
+    const bookStats = {{ book_stats | tojson }};
+    const activityData = {{ activity_data | tojson }};
+    
+    // Graphique camembert des statuts de livres
+    const booksCtx = document.getElementById('booksStatusChart').getContext('2d');
+    new Chart(booksCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Approuvés', 'En attente', 'En lecture', 'Terminés'],
+            datasets: [{
+                data: [
+                    bookStats.approved || 0,
+                    bookStats.pending || 0,
+                    bookStats.reading || 0,
+                    bookStats.completed || 0
+                ],
+                backgroundColor: [
+                    '#4CAF50',
+                    '#FFC107',
+                    '#2196F3',
+                    '#9C27B0'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: getComputedStyle(document.documentElement)
+                            .getPropertyValue('--text-color').trim() || '#fff'
+                    }
+                }
+            }
+        }
+    });
+    
+    // Graphique d'activité mensuelle
+    const activityCtx = document.getElementById('activityChart').getContext('2d');
+    new Chart(activityCtx, {
+        type: 'line',
+        data: {
+            labels: activityData.labels || [],
+            datasets: [{
+                label: 'Propositions',
+                data: activityData.proposals || [],
+                borderColor: '#4CAF50',
+                backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                fill: true,
+                tension: 0.4
+            }, {
+                label: 'Participations',
+                data: activityData.participations || [],
+                borderColor: '#2196F3',
+                backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: getComputedStyle(document.documentElement)
+                            .getPropertyValue('--text-color').trim() || '#fff'
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        color: getComputedStyle(document.documentElement)
+                            .getPropertyValue('--text-muted').trim() || '#aaa'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        color: getComputedStyle(document.documentElement)
+                            .getPropertyValue('--text-muted').trim() || '#aaa'
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -433,3 +433,71 @@ class ViewingParticipation(db.Model):
     
     # Unique constraint
     __table_args__ = (db.UniqueConstraint('user_id', 'viewing_session_id', name='unique_user_viewing_participation'),)
+
+
+class Notification(db.Model):
+    """Notification in-app pour les utilisateurs"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    type = db.Column(db.String(50), nullable=False)  # badge, vote, reading, review, system
+    title = db.Column(db.String(200), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    link = db.Column(db.String(500))  # URL optionnel vers le contenu lié
+    icon = db.Column(db.String(50))  # Icône FontAwesome
+    is_read = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime, default=utc_now)
+    read_at = db.Column(db.DateTime)
+    
+    # Relations
+    user = db.relationship('User', backref='notifications')
+    
+    @classmethod
+    def create_notification(cls, user_id, notification_type, title, message, link=None, icon=None):
+        """Crée et enregistre une nouvelle notification"""
+        from app import db
+        notification = cls(
+            user_id=user_id,
+            type=notification_type,
+            title=title,
+            message=message,
+            link=link,
+            icon=icon or cls.get_default_icon(notification_type)
+        )
+        db.session.add(notification)
+        db.session.commit()
+        return notification
+    
+    @staticmethod
+    def get_default_icon(notification_type):
+        """Retourne l'icône par défaut selon le type"""
+        icons = {
+            'badge': 'fa-medal',
+            'vote': 'fa-check-to-slot',
+            'reading': 'fa-book-open',
+            'review': 'fa-star',
+            'cineclub': 'fa-film',
+            'system': 'fa-bell'
+        }
+        return icons.get(notification_type, 'fa-bell')
+    
+    def mark_as_read(self):
+        """Marque la notification comme lue"""
+        self.is_read = True
+        self.read_at = utc_now()
+    
+    @classmethod
+    def get_unread_count(cls, user_id):
+        """Retourne le nombre de notifications non lues"""
+        return cls.query.filter_by(user_id=user_id, is_read=False).count()
+    
+    @classmethod
+    def get_recent(cls, user_id, limit=20):
+        """Retourne les notifications récentes"""
+        return cls.query.filter_by(user_id=user_id).order_by(
+            cls.is_read.asc(),
+            cls.created_at.desc()
+        ).limit(limit).all()
+    
+    def __repr__(self):
+        return f'<Notification {self.type}: {self.title}>'
+

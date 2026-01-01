@@ -3,20 +3,58 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_migrate import Migrate
 from dotenv import load_dotenv
 import os
+import logging
+from pythonjsonlogger import jsonlogger
 
 # Charger les variables d'environnement
 load_dotenv()
 
 # Initialiser les extensions
 db = SQLAlchemy()
+migrate = Migrate()
 login_manager = LoginManager()
 limiter = Limiter(
     key_func=get_remote_address,
     default_limits=["200 per day", "50 per hour"],
     storage_uri="memory://"
 )
+
+
+def setup_logging(app):
+    """Configure le logging structuré JSON pour l'application"""
+    log_level = logging.DEBUG if app.debug else logging.INFO
+    
+    # Format JSON pour les logs
+    json_handler = logging.StreamHandler()
+    formatter = jsonlogger.JsonFormatter(
+        '%(asctime)s %(levelname)s %(name)s %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+    json_handler.setFormatter(formatter)
+    
+    # Logger principal de l'application
+    app.logger.handlers.clear()
+    app.logger.addHandler(json_handler)
+    app.logger.setLevel(log_level)
+    
+    # Logger pour les requêtes
+    logging.getLogger('werkzeug').handlers.clear()
+    logging.getLogger('werkzeug').addHandler(json_handler)
+    logging.getLogger('werkzeug').setLevel(logging.WARNING)
+    
+    # Logger SQLAlchemy (seulement les erreurs en prod)
+    logging.getLogger('sqlalchemy.engine').setLevel(
+        logging.INFO if app.debug else logging.WARNING
+    )
+    
+    app.logger.info('Logging configuré', extra={
+        'level': log_level,
+        'environment': os.getenv('FLASK_ENV', 'development')
+    })
+
 
 def create_app():
     app = Flask(__name__)
@@ -44,10 +82,14 @@ def create_app():
     
     # Initialiser les extensions avec l'app
     db.init_app(app)
+    migrate.init_app(app, db)
     login_manager.init_app(app)
     limiter.init_app(app)
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Veuillez vous connecter avec Twitch pour accéder à cette page.'
+    
+    # Configuration du logging
+    setup_logging(app)
     
     # Enregistrer les blueprints
     from app.routes.main import main_bp
@@ -55,12 +97,14 @@ def create_app():
     from app.routes.admin import admin_bp
     from app.routes.ebooks import ebooks_bp
     from app.routes.cineclub import cineclub_bp
+    from app.routes.api import bp as api_bp
     
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(ebooks_bp)
     app.register_blueprint(cineclub_bp)
+    app.register_blueprint(api_bp)
     
     # Gestionnaires d'erreurs personnalisés
     @app.errorhandler(404)

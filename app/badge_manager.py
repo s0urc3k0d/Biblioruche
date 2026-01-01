@@ -4,7 +4,10 @@
 Système d'attribution automatique des badges
 """
 
-from app.models import User, Badge, UserBadge, ReadingParticipation, BookProposal, Vote, BookReview
+from app.models import (
+    User, Badge, UserBadge, ReadingParticipation, BookProposal, 
+    Vote, BookReview, Film, FilmVote, ViewingParticipation
+)
 from app import db
 from datetime import datetime
 
@@ -25,6 +28,7 @@ class BadgeManager:
         awarded_badges.extend(BadgeManager._check_review_badges(user))
         awarded_badges.extend(BadgeManager._check_vote_badges(user))
         awarded_badges.extend(BadgeManager._check_proposal_badges(user))
+        awarded_badges.extend(BadgeManager._check_cineclub_badges(user))
         
         return awarded_badges
     
@@ -136,6 +140,74 @@ class BadgeManager:
         # Découvreur
         if accepted_count >= 5:
             badge = BadgeManager._award_badge(user, "Découvreur")
+            if badge:
+                awarded.append(badge)
+        
+        return awarded
+    
+    @staticmethod
+    def _check_cineclub_badges(user):
+        """Vérifier les badges CinéClub"""
+        awarded = []
+        
+        # Compter les votes films
+        film_vote_count = FilmVote.query.filter_by(user_id=user.id).count()
+        
+        # Compter les participations aux séances
+        viewing_count = ViewingParticipation.query.filter_by(user_id=user.id).count()
+        
+        # Compter les propositions de films
+        film_proposal_count = Film.query.filter_by(proposed_by=user.id).count()
+        film_approved_count = Film.query.filter_by(
+            proposed_by=user.id, 
+            status='approved'
+        ).count() + Film.query.filter_by(
+            proposed_by=user.id,
+            status='selected'
+        ).count() + Film.query.filter_by(
+            proposed_by=user.id,
+            status='viewed'
+        ).count()
+        
+        # Premier Film - Première participation à une séance
+        if viewing_count >= 1:
+            badge = BadgeManager._award_badge(user, "Premier Film")
+            if badge:
+                awarded.append(badge)
+        
+        # Cinéphile - 5 séances de visionnage
+        if viewing_count >= 5:
+            badge = BadgeManager._award_badge(user, "Cinéphile")
+            if badge:
+                awarded.append(badge)
+        
+        # Cinéphile passionné - 15 séances de visionnage
+        if viewing_count >= 15:
+            badge = BadgeManager._award_badge(user, "Cinéphile passionné")
+            if badge:
+                awarded.append(badge)
+        
+        # Voteur de films - Premier vote pour un film
+        if film_vote_count >= 1:
+            badge = BadgeManager._award_badge(user, "Voteur de films")
+            if badge:
+                awarded.append(badge)
+        
+        # Critique de cinéma - 10 votes films
+        if film_vote_count >= 10:
+            badge = BadgeManager._award_badge(user, "Critique de cinéma")
+            if badge:
+                awarded.append(badge)
+        
+        # Réalisateur en herbe - Première proposition de film acceptée
+        if film_approved_count >= 1:
+            badge = BadgeManager._award_badge(user, "Réalisateur en herbe")
+            if badge:
+                awarded.append(badge)
+        
+        # Programmateur - 5 propositions de films acceptées
+        if film_approved_count >= 5:
+            badge = BadgeManager._award_badge(user, "Programmateur")
             if badge:
                 awarded.append(badge)
         
