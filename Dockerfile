@@ -35,12 +35,13 @@ RUN pip install --no-cache-dir -r requirements.txt \
 # Copier le code de l'application
 COPY --chown=biblioruche:biblioruche . .
 
-# Créer les répertoires nécessaires
+# Créer les répertoires nécessaires avec permissions ouvertes
 RUN mkdir -p instance/ebooks instance/covers \
-    && chown -R biblioruche:biblioruche instance
+    && chmod -R 777 instance
 
-# Passer à l'utilisateur non-root
-USER biblioruche
+# Note: L'utilisateur biblioruche est créé mais on reste en root
+# pour éviter les problèmes de permissions avec les volumes montés
+# USER biblioruche
 
 # Exposer le port
 EXPOSE 5000
