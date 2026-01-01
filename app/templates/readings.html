@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Lectures - BiblioRuche{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2><i class="fas fa-book-reader"></i> Lectures de l'Essaim Littéraire</h2>
+        <p class="text-muted">Suivez les lectures communes de la communauté</p>
+    </div>
+</div>
+
+<!-- Lectures en cours -->
+{% if current_readings %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h4 class="text-success"><i class="fas fa-play"></i> Lectures en cours</h4>
+        <div class="row">
+            {% for reading in current_readings %}
+            <div class="col-md-6 mb-3">
+                <div class="card border-success h-100">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0">{{ reading.book.title }}</h6>
+                    </div>                    <div class="card-body">
+                        <p class="card-text">
+                            <strong>Auteur :</strong> {{ reading.book.author }}<br>
+                            <strong>Début :</strong> {{ reading.start_date.strftime('%d/%m/%Y') }}<br>
+                            <strong>Fin prévue :</strong> {{ reading.end_date.strftime('%d/%m/%Y') }}
+                            {% if reading.debrief_date %}
+                            <br><strong>Live débrief :</strong> {{ reading.debrief_date.strftime('%d/%m/%Y') }}
+                            {% endif %}
+                        </p>
+                        {% if reading.description %}
+                        <p class="card-text">{{ reading.description }}</p>
+                        {% endif %}
+                        {% if reading.book.description %}
+                        <p class="card-text small text-muted">{{ reading.book.description }}</p>
+                        {% endif %}
+                        
+                        <!-- Informations sur les participants -->
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                <i class="fas fa-users"></i> {{ reading.get_participants_count() }} participant{{ 's' if reading.get_participants_count() != 1 else '' }}
+                                {% if current_user.is_authenticated and reading.is_user_registered(current_user.id) %}
+                                    <span class="text-success">• Vous participez</span>
+                                {% endif %}
+                            </small>
+                        </div>
+                        
+                        <!-- Boutons d'action -->
+                        <div class="mt-3">
+                            <a href="{{ url_for('main.reading_detail', reading_id=reading.id) }}" 
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i> Voir les détails
+                            </a>
+                            {% if current_user.is_authenticated %}
+                                {% if reading.is_user_registered(current_user.id) %}
+                                    <span class="btn btn-sm btn-success disabled">
+                                        <i class="fas fa-check"></i> Inscrit
+                                    </span>
+                                {% else %}
+                                    <a href="{{ url_for('main.register_for_reading', reading_id=reading.id) }}" 
+                                       class="btn btn-sm btn-primary">
+                                        <i class="fas fa-plus"></i> S'inscrire
+                                    </a>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Lectures à venir -->
+{% if upcoming_readings %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h4 class="text-info"><i class="fas fa-calendar-alt"></i> Lectures à venir</h4>
+        <div class="row">
+            {% for reading in upcoming_readings %}
+            <div class="col-md-6 mb-3">
+                <div class="card border-info h-100">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">{{ reading.book.title }}</h6>
+                    </div>                    <div class="card-body">
+                        <p class="card-text">
+                            <strong>Auteur :</strong> {{ reading.book.author }}<br>
+                            <strong>Début prévu :</strong> {{ reading.start_date.strftime('%d/%m/%Y') }}<br>
+                            <strong>Fin prévue :</strong> {{ reading.end_date.strftime('%d/%m/%Y') }}
+                            {% if reading.debrief_date %}
+                            <br><strong>Live débrief :</strong> {{ reading.debrief_date.strftime('%d/%m/%Y') }}
+                            {% endif %}
+                        </p>
+                        {% if reading.description %}
+                        <p class="card-text">{{ reading.description }}</p>
+                        {% endif %}
+                        {% if reading.book.description %}
+                        <p class="card-text small text-muted">{{ reading.book.description }}</p>
+                        {% endif %}
+                        
+                        <!-- Informations sur les participants -->
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                <i class="fas fa-users"></i> {{ reading.get_participants_count() }} participant{{ 's' if reading.get_participants_count() != 1 else '' }}
+                                {% if current_user.is_authenticated and reading.is_user_registered(current_user.id) %}
+                                    <span class="text-success">• Vous participez</span>
+                                {% endif %}
+                            </small>
+                        </div>
+                        
+                        <!-- Boutons d'action -->
+                        <div class="mt-3">
+                            <a href="{{ url_for('main.reading_detail', reading_id=reading.id) }}" 
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i> Voir les détails
+                            </a>
+                            {% if current_user.is_authenticated %}
+                                {% if reading.is_user_registered(current_user.id) %}
+                                    <span class="btn btn-sm btn-success disabled">
+                                        <i class="fas fa-check"></i> Inscrit
+                                    </span>
+                                {% else %}
+                                    <a href="{{ url_for('main.register_for_reading', reading_id=reading.id) }}" 
+                                       class="btn btn-sm btn-primary">
+                                        <i class="fas fa-plus"></i> S'inscrire
+                                    </a>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mt-2">
+                            <span class="badge bg-warning">Prochainement</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Lectures terminées -->
+{% if completed_readings %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h4 class="text-secondary"><i class="fas fa-check-circle"></i> Lectures récemment terminées</h4>
+        <div class="row">
+            {% for reading in completed_readings %}
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card border-secondary h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="card-title">{{ reading.book.title }}</h6>
+                            <span class="badge bg-secondary">Terminé</span>
+                        </div>
+                        <p class="card-text text-muted">par {{ reading.book.author }}</p>
+                        <p class="card-text small">
+                            <strong>Période :</strong> {{ reading.start_date.strftime('%d/%m/%Y') }} - {{ reading.end_date.strftime('%d/%m/%Y') }}
+                            {% if reading.debrief_date %}
+                            <br><strong>Débrief :</strong> {{ reading.debrief_date.strftime('%d/%m/%Y') }}
+                            {% endif %}
+                        </p>
+                        {% if reading.book.description %}
+                        <p class="card-text small text-muted">{{ reading.book.description[:80] }}{% if reading.book.description|length > 80 %}...{% endif %}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Lectures archivées -->
+{% if archived_readings %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h4 class="text-muted"><i class="fas fa-archive"></i> Lectures archivées</h4>
+        <div class="row">
+            {% for reading in archived_readings %}            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card border-secondary h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="card-title">{{ reading.book.title }}</h6>
+                            <span class="badge bg-secondary">Archivé</span>
+                        </div>
+                        <p class="card-text text-muted">par {{ reading.book.author }}</p>
+                        <p class="card-text small">
+                            <strong>Période :</strong> {{ reading.start_date.strftime('%d/%m/%Y') }} - {{ reading.end_date.strftime('%d/%m/%Y') }}
+                            {% if reading.debrief_date %}
+                            <br><strong>Débrief :</strong> {{ reading.debrief_date.strftime('%d/%m/%Y') }}
+                            {% endif %}
+                        </p>
+                        {% if reading.book.description %}
+                        <p class="card-text small text-muted">{{ reading.book.description[:80] }}{% if reading.book.description|length > 80 %}...{% endif %}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Message si aucune lecture -->
+{% if not current_readings and not upcoming_readings and not completed_readings and not archived_readings %}
+<div class="row">
+    <div class="col-12">
+        <div class="text-center py-5">
+            <i class="fas fa-book-reader fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">Aucune lecture programmée</h5>
+            <p class="text-muted">Les lectures de l'Essaim Littéraire apparaîtront ici une fois qu'elles seront programmées par les administrateurs.</p>
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('main.propose_book') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Proposer un livre
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

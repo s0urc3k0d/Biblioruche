@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block title %}Programmer une lecture - Administration{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h2>
+                <i class="fas fa-book-open"></i> Programmer une nouvelle lecture
+                <a href="{{ url_for('admin.readings') }}" class="btn btn-secondary float-end">
+                    <i class="fas fa-arrow-left"></i> Retour aux lectures
+                </a>
+            </h2>
+            <hr>
+
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                          <div class="mb-3">
+                            {{ form.book_id.label(class="form-label") }}
+                            {{ form.book_id(class="form-select") }}
+                            {% if form.book_id.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.book_id.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                Sélectionnez un livre existant ou ajoutez un nouveau livre ci-dessous.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.add_new_book(class="form-check-input") }}
+                                {{ form.add_new_book.label(class="form-check-label") }}
+                            </div>
+                            <div class="form-text">
+                                Cochez cette case pour ajouter un nouveau livre au lieu de sélectionner un livre existant.
+                            </div>
+                        </div>
+
+                        <!-- Section pour ajouter un nouveau livre -->
+                        <div id="new-book-section" style="display: none;">
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-plus"></i> Nouveau livre</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                {{ form.new_book_title.label(class="form-label") }}
+                                                {{ form.new_book_title(class="form-control") }}
+                                                {% if form.new_book_title.errors %}
+                                                    <div class="text-danger">
+                                                        {% for error in form.new_book_title.errors %}
+                                                            <small>{{ error }}</small>
+                                                        {% endfor %}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                {{ form.new_book_author.label(class="form-label") }}
+                                                {{ form.new_book_author(class="form-control") }}
+                                                {% if form.new_book_author.errors %}
+                                                    <div class="text-danger">
+                                                        {% for error in form.new_book_author.errors %}
+                                                            <small>{{ error }}</small>
+                                                        {% endfor %}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        {{ form.new_book_description.label(class="form-label") }}
+                                        {{ form.new_book_description(class="form-control", rows="3") }}
+                                        {% if form.new_book_description.errors %}
+                                            <div class="text-danger">
+                                                {% for error in form.new_book_description.errors %}
+                                                    <small>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                {{ form.new_book_isbn.label(class="form-label") }}
+                                                {{ form.new_book_isbn(class="form-control") }}
+                                                {% if form.new_book_isbn.errors %}
+                                                    <div class="text-danger">
+                                                        {% for error in form.new_book_isbn.errors %}
+                                                            <small>{{ error }}</small>
+                                                        {% endfor %}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                {{ form.new_book_publication_year.label(class="form-label") }}
+                                                {{ form.new_book_publication_year(class="form-control") }}
+                                                {% if form.new_book_publication_year.errors %}
+                                                    <div class="text-danger">
+                                                        {% for error in form.new_book_publication_year.errors %}
+                                                            <small>{{ error }}</small>
+                                                        {% endfor %}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                {{ form.new_book_publisher.label(class="form-label") }}
+                                                {{ form.new_book_publisher(class="form-control") }}
+                                                {% if form.new_book_publisher.errors %}
+                                                    <div class="text-danger">
+                                                        {% for error in form.new_book_publisher.errors %}
+                                                            <small>{{ error }}</small>
+                                                        {% endfor %}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                {{ form.new_book_genre.label(class="form-label") }}
+                                                {{ form.new_book_genre(class="form-control") }}
+                                                {% if form.new_book_genre.errors %}
+                                                    <div class="text-danger">
+                                                        {% for error in form.new_book_genre.errors %}
+                                                            <small>{{ error }}</small>
+                                                        {% endfor %}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.start_date.label(class="form-label") }}
+                                    {{ form.start_date(class="form-control", type="date") }}
+                                    {% if form.start_date.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.start_date.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.end_date.label(class="form-label") }}
+                                    {{ form.end_date(class="form-control", type="date") }}
+                                    {% if form.end_date.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.end_date.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.debrief_date.label(class="form-label") }}
+                            {{ form.debrief_date(class="form-control", type="date") }}
+                            {% if form.debrief_date.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.debrief_date.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                Date prévue pour le débriefing et la discussion du livre (optionnel).
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.description.label(class="form-label") }}
+                            {{ form.description(class="form-control", rows="4") }}
+                            {% if form.description.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.description.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                Description de la session de lecture, consignes particulières, etc.
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('admin.readings') }}" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-times"></i> Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Programmer la lecture
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Informations d'aide -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-info-circle"></i> Informations</h6>
+                </div>
+                <div class="card-body">                    <ul class="mb-0">
+                        <li><strong>Livres disponibles :</strong> Vous pouvez sélectionner un livre existant ou ajouter un nouveau livre directement.</li>
+                        <li><strong>Nouveau livre :</strong> Les livres ajoutés ici seront automatiquement marqués comme "sélectionnés" pour la lecture.</li>
+                        <li><strong>Planification :</strong> Assurez-vous que les dates ne se chevauchent pas avec d'autres lectures en cours.</li>
+                        <li><strong>Débriefing :</strong> Le débriefing peut être programmé après la fin de la lecture pour discuter du livre.</li>
+                        <li><strong>Statut automatique :</strong> La lecture aura automatiquement le statut "à venir" puis deviendra "en cours" aux dates prévues.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const addNewBookCheckbox = document.getElementById('add_new_book');
+    const newBookSection = document.getElementById('new-book-section');
+    const bookSelect = document.getElementById('book_id');
+    
+    function toggleNewBookSection() {
+        if (addNewBookCheckbox.checked) {
+            newBookSection.style.display = 'block';
+            bookSelect.disabled = true;
+            bookSelect.value = '';
+        } else {
+            newBookSection.style.display = 'none';
+            bookSelect.disabled = false;
+        }
+    }
+    
+    addNewBookCheckbox.addEventListener('change', toggleNewBookSection);
+    
+    // Initial state
+    toggleNewBookSection();
+});
+</script>
+{% endblock %}

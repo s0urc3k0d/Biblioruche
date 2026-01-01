@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+
+{% block title %}{{ book.title }} - BiblioRuche{% endblock %}
+
+{% block content %}
+<div class="book-detail">
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Accueil</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('main.books') }}">Livres</a></li>
+                <li class="breadcrumb-item active">{{ book.title }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-start">
+                    <h3 class="mb-0"><i class="fas fa-book"></i> {{ book.title }}</h3>
+                    <span class="badge badge-lg 
+                        {% if book.status == 'pending' %}bg-warning
+                        {% elif book.status == 'approved' %}bg-primary
+                        {% elif book.status == 'selected' %}bg-success
+                        {% elif book.status == 'in_reading' %}bg-success
+                        {% elif book.status == 'completed' %}bg-info
+                        {% elif book.status == 'archived' %}bg-secondary
+                        {% else %}bg-dark{% endif %}">
+                        {% if book.status == 'pending' %}En attente
+                        {% elif book.status == 'approved' %}Approuvé
+                        {% elif book.status == 'selected' %}Sélectionné
+                        {% elif book.status == 'in_reading' %}En lecture
+                        {% elif book.status == 'completed' %}Terminé
+                        {% elif book.status == 'archived' %}Archivé
+                        {% else %}{{ book.status }}{% endif %}
+                    </span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h5 class="text-muted mb-3">par {{ book.author }}</h5>
+                        
+                        {% if book.description %}
+                        <div class="mb-4">
+                            <h6><i class="fas fa-align-left"></i> Description</h6>
+                            <p class="text-justify">{{ book.description }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mb-3">
+                            <h6><i class="fas fa-info-circle"></i> Informations</h6>
+                            <div class="row">
+                                {% if book.genre %}
+                                <div class="col-sm-6 mb-2">
+                                    <strong>Genre :</strong> {{ book.genre }}
+                                </div>
+                                {% endif %}
+                                {% if book.publication_year %}
+                                <div class="col-sm-6 mb-2">
+                                    <strong>Année :</strong> {{ book.publication_year }}
+                                </div>
+                                {% endif %}
+                                {% if book.publisher %}
+                                <div class="col-sm-6 mb-2">
+                                    <strong>Éditeur :</strong> {{ book.publisher }}
+                                </div>
+                                {% endif %}
+                                {% if book.pages_count %}
+                                <div class="col-sm-6 mb-2">
+                                    <strong>Pages :</strong> {{ book.pages_count }}
+                                </div>
+                                {% endif %}
+                                {% if book.isbn %}
+                                <div class="col-sm-6 mb-2">
+                                    <strong>ISBN :</strong> {{ book.isbn }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                          <div class="mb-3">
+                            <small class="text-muted">
+                                <i class="fas fa-user"></i> Proposé par <strong><a href="{{ url_for('main.user_profile', user_id=book.proposer.id) }}" 
+                                                                                      class="text-decoration-none">{{ book.proposer.display_name }}</a></strong> 
+                                le {{ book.created_at.strftime('%d/%m/%Y à %H:%M') }}
+                            </small>
+                        </div>
+                        
+                        <!-- Ratings Section for completed/archived books -->
+                        {% if book.can_be_reviewed() %}
+                        <div class="mb-4">
+                            <h6><i class="fas fa-star"></i> Notes et avis</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {% if book.get_average_rating() > 0 %}
+                                    <div class="d-flex align-items-center mb-2">
+                                        <div class="stars me-2">
+                                            {% for i in range(1, 6) %}
+                                                {% if i <= book.get_average_rating()|round %}
+                                                    <i class="fas fa-star text-warning"></i>
+                                                {% else %}
+                                                    <i class="far fa-star text-muted"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        <span class="fw-bold">{{ book.get_average_rating() }}/5</span>
+                                        <small class="text-muted ms-2">({{ book.get_review_count() }} avis)</small>
+                                    </div>
+                                    {% else %}
+                                    <p class="text-muted">Aucune note pour le moment</p>
+                                    {% endif %}
+                                </div>                                <div class="col-md-6">
+                                    <a href="{{ url_for('main.add_review', book_id=book.id) }}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-edit"></i> Donner mon avis
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Sessions de lecture -->
+        {% if reading_sessions %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-book-reader"></i> Sessions de lecture</h6>
+            </div>
+            <div class="card-body">
+                {% for session in reading_sessions %}
+                <div class="mb-3 pb-3 {% if not loop.last %}border-bottom{% endif %}">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <strong>{{ session.start_date.strftime('%d/%m/%Y') }} - {{ session.end_date.strftime('%d/%m/%Y') }}</strong>
+                        <span class="badge 
+                            {% if session.status == 'current' %}bg-success
+                            {% elif session.status == 'upcoming' %}bg-info
+                            {% elif session.status == 'completed' %}bg-secondary
+                            {% else %}bg-dark{% endif %}">
+                            {% if session.status == 'current' %}En cours
+                            {% elif session.status == 'upcoming' %}À venir
+                            {% elif session.status == 'completed' %}Terminé
+                            {% else %}{{ session.status }}{% endif %}
+                        </span>
+                    </div>
+                    {% if session.description %}
+                    <p class="small mb-2">{{ session.description }}</p>
+                    {% endif %}
+                    {% if session.debrief_date %}
+                    <small class="text-muted">
+                        <i class="fas fa-calendar"></i> Débrief : {{ session.debrief_date.strftime('%d/%m/%Y') }}
+                    </small>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Sessions de vote -->
+        {% if voting_sessions %}
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-vote-yea"></i> Participations aux votes</h6>
+            </div>
+            <div class="card-body">
+                {% for session in voting_sessions %}
+                <div class="mb-3 pb-3 {% if not loop.last %}border-bottom{% endif %}">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <strong>{{ session.title }}</strong>
+                        <span class="badge 
+                            {% if session.status == 'active' %}bg-success
+                            {% elif session.status == 'closed' %}bg-secondary
+                            {% else %}bg-dark{% endif %}">
+                            {% if session.status == 'active' %}Actif
+                            {% elif session.status == 'closed' %}Fermé
+                            {% else %}{{ session.status }}{% endif %}
+                        </span>
+                    </div>
+                    <small class="text-muted">
+                        {{ session.start_date.strftime('%d/%m/%Y') }} - {{ session.end_date.strftime('%d/%m/%Y') }}
+                    </small>
+                    {% if session.status == 'active' %}
+                    <div class="mt-2">
+                        <a href="{{ url_for('main.vote_detail', vote_id=session.id) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-vote-yea"></i> Voter
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>        {% endif %}
+    </div>
+</div>
+
+<!-- Reviews Section for completed/archived books -->
+{% if book.can_be_reviewed() and book.reviews %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-comments"></i> Avis des lecteurs</h5>
+            </div>
+            <div class="card-body">
+                {% for review in book.reviews %}
+                    {% if review.is_visible %}
+                    <div class="review mb-4 {% if not loop.last %}border-bottom pb-4{% endif %}">
+                        <div class="d-flex align-items-start">
+                            <div class="me-3">
+                                {% if review.user.avatar_url %}
+                                <img src="{{ review.user.avatar_url }}" alt="{{ review.user.display_name }}" 
+                                     class="rounded-circle" width="50" height="50">
+                                {% else %}
+                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" 
+                                     style="width: 50px; height: 50px;">
+                                    {{ review.user.display_name[0].upper() }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h6 class="mb-1"><a href="{{ url_for('main.user_profile', user_id=review.user.id) }}" 
+                                                   class="text-decoration-none">{{ review.user.display_name }}</a></h6>
+                                        <div class="stars">
+                                            {% for i in range(1, 6) %}
+                                                {% if i <= review.rating %}
+                                                    <i class="fas fa-star text-warning"></i>
+                                                {% else %}
+                                                    <i class="far fa-star text-muted"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">
+                                        {{ review.created_at.strftime('%d/%m/%Y à %H:%M') }}
+                                        {% if review.updated_at != review.created_at %}
+                                        <br><em>Modifié le {{ review.updated_at.strftime('%d/%m/%Y à %H:%M') }}</em>
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                {% if review.comment %}
+                                <p class="mb-0">{{ review.comment }}</p>
+                                {% endif %}                                {% if current_user.is_authenticated and current_user.id == review.user_id %}
+                                <div class="mt-2">
+                                    <a href="{{ url_for('main.add_review', book_id=book.id) }}" 
+                                       class="btn btn-sm btn-primary">
+                                        <i class="fas fa-edit"></i> Modifier mon avis
+                                    </a>
+                                </div>
+                                {% endif %}                                {% if current_user.is_authenticated and current_user.is_admin %}
+                                <div class="mt-2">
+                                    <a href="{{ url_for('admin.moderate_review', review_id=review.id) }}" 
+                                       class="btn btn-sm btn-warning">
+                                        <i class="fas fa-cog"></i> Modérer
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center">
+                <a href="{{ url_for('main.books') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Retour aux livres
+                </a>
+                {% if current_user.is_authenticated %}
+                    {% if current_user.is_admin or (book.proposed_by == current_user.id and book.status not in ['approved', 'rejected']) %}
+                    <a href="{{ url_for('main.edit_book', book_id=book.id) }}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit"></i> Modifier
+                    </a>
+                    {% endif %}
+                    {% if book.status == 'pending' and current_user.is_admin %}
+                    <a href="{{ url_for('admin.proposals') }}" class="btn btn-outline-success">
+                        <i class="fas fa-cog"></i> Gérer
+                    </a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+{% endblock %}

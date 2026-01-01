@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Résolution OAuth - BiblioRuche{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>🔧 Résolution du Problème OAuth Twitch</h1>
+    
+    <div class="alert alert-danger">
+        <h4>❌ Problème Identifié</h4>
+        <p>L'erreur <code>redirect_mismatch</code> indique que l'URI de redirection configurée dans l'application Twitch ne correspond pas à celle utilisée par BiblioRuche.</p>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h3>✅ Solution Recommandée : Mettre à jour Twitch</h3>
+                </div>
+                <div class="card-body">
+                    <ol>
+                        <li>Aller sur <a href="https://dev.twitch.tv/console/apps" target="_blank" class="btn btn-link p-0">https://dev.twitch.tv/console/apps</a></li>
+                        <li>Sélectionner votre application (Client ID: <code>f5m6kv9efq9gqjqo5bedl96jx50ezl</code>)</li>
+                        <li>Dans "OAuth Redirect URLs", remplacer l'URL existante par :</li>
+                        <div class="alert alert-info">
+                            <code>http://127.0.0.1:5000/auth/callback</code>
+                            <button class="btn btn-sm btn-outline-primary ms-2" onclick="navigator.clipboard.writeText('http://127.0.0.1:5000/auth/callback')">Copier</button>
+                        </div>
+                        <li>Cliquer sur "Save" pour sauvegarder</li>
+                        <li>Attendre quelques secondes que les modifications soient prises en compte</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4>🔍 Diagnostic</h4>
+                </div>
+                <div class="card-body">
+                    <p><strong>Configuration Flask :</strong></p>
+                    <small><code>http://127.0.0.1:5000/auth/callback</code></small>
+                    
+                    <p class="mt-3"><strong>URI générée :</strong></p>
+                    <small><code>http://127.0.0.1:5000/auth/callback</code></small>
+                    
+                    <div class="mt-3">
+                        <span class="badge bg-success">✅ Application OK</span><br>
+                        <span class="badge bg-danger">❌ Configuration Twitch</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h4>🎯 Test</h4>
+                </div>
+                <div class="card-body">
+                    <p>Après avoir appliqué la correction :</p>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-sm">Tester la connexion</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3>🔄 Solution Alternative : Modifier .env</h3>
+                </div>
+                <div class="card-body">
+                    <p>Si vous préférez garder la configuration Twitch actuelle, modifiez le fichier <code>.env</code> :</p>
+                    <pre><code># Remplacer cette ligne :
+TWITCH_REDIRECT_URI=http://127.0.0.1:5000/auth/callback
+
+# Par l'URL exacte configurée dans votre application Twitch</code></pre>
+                    <div class="alert alert-warning">
+                        <strong>Note :</strong> Cette solution est moins recommandée car elle nécessite de connaître l'URL exacte configurée dans Twitch.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-4">
+        <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Retour à l'accueil</a>
+        <a href="{{ url_for('auth.oauth_debug') }}" class="btn btn-info">Voir le diagnostic</a>
+    </div>
+</div>
+
+<script>
+// Fonction pour copier dans le presse-papier
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        alert('URL copiée dans le presse-papier !');
+    });
+}
+</script>
+{% endblock %}

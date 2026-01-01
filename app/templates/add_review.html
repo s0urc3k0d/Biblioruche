@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}
+{% if existing_review %}Modifier mon avis{% else %}Donner mon avis{% endif %} - {{ book.title }} - BiblioRuche
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Accueil</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('main.books') }}">Livres</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('main.book_detail', book_id=book.id) }}">{{ book.title }}</a></li>
+                <li class="breadcrumb-item active">
+                    {% if existing_review %}Modifier mon avis{% else %}Donner mon avis{% endif %}
+                </li>
+            </ol>
+        </nav>
+
+        <div class="card">
+            <div class="card-header">
+                <h4>
+                    <i class="fas fa-star"></i> 
+                    {% if existing_review %}Modifier mon avis{% else %}Donner mon avis{% endif %}
+                </h4>
+                <h6 class="text-muted mb-0">{{ book.title }} - {{ book.author }}</h6>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-4">
+                        {{ form.rating.label(class="form-label") }} <span class="text-danger">*</span>
+                        <div class="rating-options">
+                            {% for subfield in form.rating %}
+                                <div class="form-check form-check-inline">
+                                    {{ subfield(class="form-check-input") }}
+                                    {{ subfield.label(class="form-check-label") }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                        {% if form.rating.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in form.rating.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-4">
+                        {{ form.comment.label(class="form-label") }}
+                        {{ form.comment(class="form-control", rows="5") }}
+                        {% if form.comment.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in form.comment.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <small class="text-muted">Facultatif - Partagez votre opinion sur ce livre</small>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Retour
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> 
+                            {% if existing_review %}Modifier l'avis{% else %}Publier l'avis{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.rating-options .form-check {
+    margin-right: 1rem;
+}
+.rating-options .form-check-label {
+    margin-left: 0.25rem;
+}
+</style>
+{% endblock %}

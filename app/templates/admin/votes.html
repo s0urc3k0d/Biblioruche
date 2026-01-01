@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion des votes - BiblioRuche{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-vote-yea"></i> Gestion des votes</h2>
+            <a href="{{ url_for('admin.create_vote') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Créer un nouveau vote
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Votes actifs -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-play"></i> Votes actifs ({{ active_votes|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% if active_votes %}
+                <div class="row">
+                    {% for vote in active_votes %}
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card border-success">
+                            <div class="card-body">
+                                <h6 class="card-title">{{ vote.title }}</h6>
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar"></i> Fin : {{ vote.end_date.strftime('%d/%m/%Y') }}
+                                    </small>
+                                </p>
+                                <p class="card-text">
+                                    <span class="badge bg-info">{{ vote.options|length }} options</span>
+                                    <span class="badge bg-secondary">{{ vote.votes|length }} votes</span>
+                                </p>                                <div class="btn-group btn-group-sm w-100">
+                                    <a href="{{ url_for('main.vote_detail', vote_id=vote.id) }}" 
+                                       class="btn btn-outline-primary">
+                                        <i class="fas fa-eye"></i> Voir
+                                    </a>
+                                    <a href="{{ url_for('main.vote_detail', vote_id=vote.id) }}?show_results=1" 
+                                       class="btn btn-outline-info">
+                                        <i class="fas fa-chart-bar"></i> Résultats
+                                    </a>
+                                    <a href="{{ url_for('admin.edit_vote', vote_id=vote.id) }}" 
+                                       class="btn btn-outline-warning">
+                                        <i class="fas fa-edit"></i> Modifier
+                                    </a>
+                                    <a href="{{ url_for('admin.close_vote', vote_id=vote.id) }}" 
+                                       class="btn btn-outline-danger"
+                                       onclick="return confirm('Êtes-vous sûr de vouloir clôturer ce vote ?')">
+                                        <i class="fas fa-stop"></i> Clôturer
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Aucun vote actif</h5>
+                    <p class="text-muted">Les votes en cours apparaîtront ici.</p>
+                    <a href="{{ url_for('admin.create_vote') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Créer le premier vote
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Votes terminés -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="fas fa-history"></i> Votes terminés ({{ closed_votes|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% if closed_votes %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Titre</th>
+                                <th>Date de fin</th>
+                                <th>Options</th>
+                                <th>Votes totaux</th>
+                                <th>Livre gagnant</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for vote in closed_votes %}
+                            <tr>
+                                <td>{{ vote.title }}</td>
+                                <td>{{ vote.end_date.strftime('%d/%m/%Y') }}</td>
+                                <td>{{ vote.options|length }}</td>
+                                <td>{{ vote.votes|length }}</td>
+                                <td>
+                                    {% if vote.winning_book %}
+                                    <span class="badge bg-success">{{ vote.winning_book.title }}</span>
+                                    {% else %}
+                                    <span class="badge bg-warning">Non déterminé</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('main.vote_detail', vote_id=vote.id) }}" 
+                                           class="btn btn-outline-primary" title="Voir les résultats">
+                                            <i class="fas fa-chart-bar"></i>
+                                        </a>
+                                        {% if vote.winning_book and vote.winning_book.status != 'in_reading' %}
+                                        <a href="{{ url_for('admin.create_reading') }}?book_id={{ vote.winning_book.id }}" 
+                                           class="btn btn-outline-success" title="Programmer la lecture">
+                                            <i class="fas fa-book-reader"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-archive fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Aucun vote terminé</h5>
+                    <p class="text-muted">L'historique des votes apparaîtra ici.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12 text-center">
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Retour au tableau de bord
+        </a>
+    </div>
+</div>
+{% endblock %}

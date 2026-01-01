@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion des propositions - Administration{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-lightbulb"></i> Gestion des propositions</h2>
+            
+            <!-- Actions en lot pour les propositions en attente -->
+            {% if current_status == 'pending' and proposals %}
+            <div class="btn-group">
+                <button type="button" id="approveSelected" class="btn btn-success" disabled>
+                    <i class="fas fa-check"></i> Approuver sélectionnées
+                </button>
+                <button type="button" id="rejectSelected" class="btn btn-danger" disabled>
+                    <i class="fas fa-times"></i> Rejeter sélectionnées
+                </button>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Filtres par statut -->
+        <div class="mb-3">
+            <div class="btn-group" role="group" aria-label="Filtres">
+                <a href="{{ url_for('admin.proposals', status='pending') }}" 
+                   class="btn {% if current_status == 'pending' %}btn-warning{% else %}btn-outline-warning{% endif %}">
+                    En attente
+                </a>
+                <a href="{{ url_for('admin.proposals', status='approved') }}" 
+                   class="btn {% if current_status == 'approved' %}btn-success{% else %}btn-outline-success{% endif %}">
+                    Approuvées
+                </a>
+                <a href="{{ url_for('admin.proposals', status='rejected') }}" 
+                   class="btn {% if current_status == 'rejected' %}btn-danger{% else %}btn-outline-danger{% endif %}">
+                    Rejetées
+                </a>
+            </div>
+            
+            {% if current_status == 'pending' and proposals %}
+            <div class="form-check mt-2">
+                <input class="form-check-input" type="checkbox" id="selectAll">
+                <label class="form-check-label" for="selectAll">
+                    Sélectionner/Désélectionner tout
+                </label>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if proposals %}
+<form id="bulkActionForm">
+<div class="row">
+    {% for proposal in proposals %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100 {% if proposal.status == 'pending' %}border-warning{% elif proposal.status == 'approved' %}border-success{% else %}border-danger{% endif %}">
+            <div class="card-header {% if proposal.status == 'pending' %}bg-warning text-dark{% elif proposal.status == 'approved' %}bg-success text-white{% else %}bg-danger text-white{% endif %}">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">{{ proposal.title }}</h6>
+                    <div class="d-flex align-items-center">
+                        {% if proposal.status == 'pending' %}
+                        <input type="checkbox" class="form-check-input me-2 proposal-checkbox" 
+                               value="{{ proposal.id }}" name="selected_proposals">
+                        {% endif %}
+                        <span class="badge {% if proposal.status == 'pending' %}bg-dark{% else %}bg-light text-dark{% endif %}">
+                            {% if proposal.status == 'pending' %}En attente
+                            {% elif proposal.status == 'approved' %}Approuvée
+                            {% else %}Rejetée{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    <strong>Auteur :</strong> {{ proposal.author }}<br>
+                    {% if proposal.publication_year %}
+                    <strong>Année :</strong> {{ proposal.publication_year }}<br>
+                    {% endif %}
+                    {% if proposal.pages_count %}
+                    <strong>Pages :</strong> {{ proposal.pages_count }}<br>
+                    {% endif %}
+                    {% if proposal.publisher %}
+                    <strong>Éditeur :</strong> {{ proposal.publisher }}<br>
+                    {% endif %}
+                    {% if proposal.isbn %}
+                    <strong>ISBN :</strong> {{ proposal.isbn }}<br>
+                    {% endif %}
+                </p>
+                
+                {% if proposal.description %}
+                <p class="card-text small">{{ proposal.description }}</p>
+                {% endif %}
+                
+                <hr>
+                <small class="text-muted">
+                    Proposé par <strong><a href="{{ url_for('main.user_profile', user_id=proposal.proposer.id) }}" 
+                                        class="text-decoration-none">{{ proposal.proposer.display_name }}</a></strong><br>
+                    le {{ proposal.created_at.strftime('%d/%m/%Y à %H:%M') }}
+                </small>
+            </div>
+            
+            {% if proposal.status == 'pending' %}
+            <div class="card-footer bg-transparent">
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('admin.approve_proposal', proposal_id=proposal.id) }}" 
+                       class="btn btn-success btn-sm" onclick="return confirm('Approuver cette proposition ?')">
+                        <i class="fas fa-check"></i> Approuver
+                    </a>
+                    <a href="{{ url_for('admin.reject_proposal', proposal_id=proposal.id) }}" 
+                       class="btn btn-danger btn-sm" onclick="return confirm('Rejeter cette proposition ?')">
+                        <i class="fas fa-times"></i> Rejeter
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>    {% endfor %}
+</div>
+</form>
+{% else %}
+<div class="row">
+    <div class="col-12">
+        <div class="text-center py-5">
+            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">Aucune proposition {{ current_status }}</h5>
+            <p class="text-muted">
+                {% if current_status == 'pending' %}
+                Les nouvelles propositions apparaîtront ici.
+                {% elif current_status == 'approved' %}
+                Les propositions approuvées apparaîtront ici.
+                {% else %}
+                Les propositions rejetées apparaîtront ici.
+                {% endif %}
+            </p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row mt-4">
+    <div class="col-12 text-center">
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-primary">
+            <i class="fas fa-arrow-left"></i> Retour au tableau de bord
+        </a>    </div>
+</div>
+
+<script>
+// Gestion de la sélection multiple
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const proposalCheckboxes = document.querySelectorAll('.proposal-checkbox');
+    const approveButton = document.getElementById('approveSelected');
+    const rejectButton = document.getElementById('rejectSelected');
+    
+    // Sélectionner/Désélectionner tout
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            proposalCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            updateButtonStates();
+        });
+    }
+    
+    // Gérer l'état des boutons selon les sélections
+    proposalCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateButtonStates);
+    });
+    
+    function updateButtonStates() {
+        const selectedBoxes = document.querySelectorAll('.proposal-checkbox:checked');
+        const hasSelection = selectedBoxes.length > 0;
+        
+        if (approveButton) approveButton.disabled = !hasSelection;
+        if (rejectButton) rejectButton.disabled = !hasSelection;
+        
+        // Mettre à jour l'état de "select all"
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = selectedBoxes.length === proposalCheckboxes.length;
+            selectAllCheckbox.indeterminate = selectedBoxes.length > 0 && selectedBoxes.length < proposalCheckboxes.length;
+        }
+    }
+    
+    // Actions en lot
+    if (approveButton) {
+        approveButton.addEventListener('click', function() {
+            const selectedIds = Array.from(document.querySelectorAll('.proposal-checkbox:checked'))
+                .map(cb => cb.value);
+            
+            if (selectedIds.length > 0 && confirm(`Approuver ${selectedIds.length} proposition(s) ?`)) {
+                bulkAction('approve', selectedIds);
+            }
+        });
+    }
+    
+    if (rejectButton) {
+        rejectButton.addEventListener('click', function() {
+            const selectedIds = Array.from(document.querySelectorAll('.proposal-checkbox:checked'))
+                .map(cb => cb.value);
+            
+            if (selectedIds.length > 0 && confirm(`Rejeter ${selectedIds.length} proposition(s) ?`)) {
+                bulkAction('reject', selectedIds);
+            }
+        });
+    }
+    
+    function bulkAction(action, proposalIds) {
+        const form = document.createElement('form');        form.method = 'POST';
+        form.action = '{{ url_for("admin.bulk_proposals") }}';        // Token CSRF
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = 'csrf_token';
+        csrfToken.value = '{{ form.csrf_token._value() }}';
+        form.appendChild(csrfToken);
+        
+        // Action
+        const actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'action';
+        actionInput.value = action;
+        form.appendChild(actionInput);
+        
+        // IDs des propositions
+        proposalIds.forEach(id => {
+            const idInput = document.createElement('input');
+            idInput.type = 'hidden';
+            idInput.name = 'proposal_ids';
+            idInput.value = id;
+            form.appendChild(idInput);
+        });
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+});
+</script>
+{% endblock %}

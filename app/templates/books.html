@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block title %}Livres - BiblioRuche{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2><i class="fas fa-book"></i> Bibliothèque</h2>
+        <p class="text-muted">Découvrez tous les livres proposés par la communauté</p>
+    </div>
+</div>
+
+<!-- Navigation par onglets -->
+<ul class="nav nav-tabs mb-4" id="bookTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab">
+            <i class="fas fa-clock"></i> En attente ({{ pending_books|length }})
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="approved-tab" data-bs-toggle="tab" data-bs-target="#approved" type="button" role="tab">
+            <i class="fas fa-thumbs-up"></i> Approuvés ({{ approved_books|length }})
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="selected-tab" data-bs-toggle="tab" data-bs-target="#selected" type="button" role="tab">
+            <i class="fas fa-star"></i> Sélectionnés ({{ selected_books|length }})
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed" type="button" role="tab">
+            <i class="fas fa-check-circle"></i> Terminés ({{ completed_books|length }})
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="archived-tab" data-bs-toggle="tab" data-bs-target="#archived" type="button" role="tab">
+            <i class="fas fa-archive"></i> Archivés ({{ archived_books|length }})
+        </button>
+    </li>
+</ul>
+    </li>
+</ul>
+
+<!-- Contenu des onglets -->
+<div class="tab-content" id="bookTabsContent">
+    <!-- Livres en attente -->
+    <div class="tab-pane fade show active" id="pending" role="tabpanel">
+        {% if pending_books %}
+        <div class="row">
+            {% for book in pending_books %}            
+            <div class="col-md-6 col-lg-4 mb-4">
+                <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="text-decoration-none text-reset">
+                    <div class="card h-100 border-warning book-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="card-title text-dark">{{ book.title }}</h6>
+                                <span class="badge bg-warning text-dark">En attente</span>
+                            </div>
+                            <p class="card-text text-muted">par {{ book.author }}</p>
+                            {% if book.publication_year or book.pages_count %}
+                            <p class="card-text small">
+                                {% if book.publication_year %}{{ book.publication_year }}{% endif %}
+                                {% if book.publication_year and book.pages_count %} • {% endif %}
+                                {% if book.pages_count %}{{ book.pages_count }} pages{% endif %}
+                            </p>
+                            {% endif %}
+                            {% if book.description %}
+                            <p class="card-text">{{ book.description[:100] }}{% if book.description|length > 100 %}...{% endif %}</p>
+                            {% endif %}
+                            <small class="text-muted">
+                                Proposé par <a href="{{ url_for('main.user_profile', user_id=book.proposer.id) }}" 
+                                              class="text-decoration-none">{{ book.proposer.display_name }}</a> le {{ book.created_at.strftime('%d/%m/%Y') }}
+                            </small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">Aucun livre en attente</h5>
+            <p class="text-muted">Soyez le premier à proposer un livre !</p>
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('main.propose_book') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Proposer un livre
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Livres approuvés -->
+    <div class="tab-pane fade" id="approved" role="tabpanel">
+        {% if approved_books %}
+        <div class="row">
+            {% for book in approved_books %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="text-decoration-none text-reset">
+                    <div class="card h-100 border-primary book-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="card-title text-dark">{{ book.title }}</h6>
+                                <span class="badge bg-primary">Approuvé</span>
+                            </div>
+                            <p class="card-text text-muted">par {{ book.author }}</p>
+                            {% if book.publication_year or book.pages_count %}
+                            <p class="card-text small">
+                                {% if book.publication_year %}{{ book.publication_year }}{% endif %}
+                                {% if book.publication_year and book.pages_count %} • {% endif %}
+                                {% if book.pages_count %}{{ book.pages_count }} pages{% endif %}
+                            </p>
+                            {% endif %}
+                            {% if book.description %}
+                            <p class="card-text">{{ book.description[:100] }}{% if book.description|length > 100 %}...{% endif %}</p>
+                            {% endif %}
+                            <small class="text-muted">
+                                Proposé par <a href="{{ url_for('main.user_profile', user_id=book.proposer.id) }}" 
+                                              class="text-decoration-none">{{ book.proposer.display_name }}</a> le {{ book.created_at.strftime('%d/%m/%Y') }}
+                            </small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-book fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">Aucun livre approuvé</h5>
+            <p class="text-muted">Les livres approuvés par l'administration apparaîtront ici.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Livres sélectionnés -->
+    <div class="tab-pane fade" id="selected" role="tabpanel">
+        {% if selected_books %}
+        <div class="row">
+            {% for book in selected_books %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="text-decoration-none text-reset">
+                    <div class="card h-100 border-success book-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="card-title text-dark">{{ book.title }}</h6>
+                                <span class="badge bg-success">En lecture</span>
+                            </div>
+                            <p class="card-text text-muted">par {{ book.author }}</p>
+                            {% if book.publication_year or book.pages_count %}
+                            <p class="card-text small">
+                                {% if book.publication_year %}{{ book.publication_year }}{% endif %}
+                                {% if book.publication_year and book.pages_count %} • {% endif %}
+                                {% if book.pages_count %}{{ book.pages_count }} pages{% endif %}
+                            </p>
+                            {% endif %}
+                            {% if book.description %}
+                            <p class="card-text">{{ book.description[:100] }}{% if book.description|length > 100 %}...{% endif %}</p>
+                            {% endif %}
+                            <small class="text-muted">
+                                Proposé par <a href="{{ url_for('main.user_profile', user_id=book.proposer.id) }}" 
+                                              class="text-decoration-none">{{ book.proposer.display_name }}</a>
+                            </small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-star fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">Aucun livre en cours de lecture</h5>
+            <p class="text-muted">Les livres actuellement en lecture collective apparaîtront ici.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Livres terminés -->
+    <div class="tab-pane fade" id="completed" role="tabpanel">
+        {% if completed_books %}
+        <div class="row">
+            {% for book in completed_books %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="text-decoration-none text-reset">
+                    <div class="card h-100 border-secondary book-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="card-title text-dark">{{ book.title }}</h6>
+                                <span class="badge bg-secondary">Terminé</span>
+                            </div>
+                            <p class="card-text text-muted">par {{ book.author }}</p>
+                            {% if book.publication_year or book.pages_count %}
+                            <p class="card-text small">
+                                {% if book.publication_year %}{{ book.publication_year }}{% endif %}
+                                {% if book.publication_year and book.pages_count %} • {% endif %}
+                                {% if book.pages_count %}{{ book.pages_count }} pages{% endif %}
+                            </p>
+                            {% endif %}
+                            {% if book.description %}
+                            <p class="card-text">{{ book.description[:100] }}{% if book.description|length > 100 %}...{% endif %}</p>
+                            {% endif %}
+                            <small class="text-muted">
+                                Proposé par <a href="{{ url_for('main.user_profile', user_id=book.proposer.id) }}" 
+                                              class="text-decoration-none">{{ book.proposer.display_name }}</a>
+                            </small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-check-circle fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">Aucun livre terminé</h5>
+            <p class="text-muted">Les livres dont la lecture est terminée apparaîtront ici.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Livres archivés -->
+    <div class="tab-pane fade" id="archived" role="tabpanel">
+        {% if archived_books %}
+        <div class="row">
+            {% for book in archived_books %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="text-decoration-none text-reset">
+                    <div class="card h-100 border-dark book-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="card-title text-dark">{{ book.title }}</h6>
+                                <span class="badge bg-dark">Archivé</span>
+                            </div>
+                            <p class="card-text text-muted">par {{ book.author }}</p>
+                            {% if book.publication_year or book.pages_count %}
+                            <p class="card-text small">
+                                {% if book.publication_year %}{{ book.publication_year }}{% endif %}
+                                {% if book.publication_year and book.pages_count %} • {% endif %}
+                                {% if book.pages_count %}{{ book.pages_count }} pages{% endif %}
+                            </p>
+                            {% endif %}
+                            {% if book.description %}
+                            <p class="card-text">{{ book.description[:100] }}{% if book.description|length > 100 %}...{% endif %}</p>
+                            {% endif %}
+                            <small class="text-muted">
+                                Proposé par <a href="{{ url_for('main.user_profile', user_id=book.proposer.id) }}" 
+                                              class="text-decoration-none">{{ book.proposer.display_name }}</a>
+                            </small>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-archive fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">Aucun livre archivé</h5>
+            <p class="text-muted">Les livres archivés apparaîtront ici.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if current_user.is_authenticated %}
+<div class="row mt-4">
+    <div class="col-12 text-center">
+        <a href="{{ url_for('main.propose_book') }}" class="btn btn-success btn-lg">
+            <i class="fas fa-plus"></i> Proposer un livre
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

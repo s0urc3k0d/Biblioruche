@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Vote - {{ voting_session.title }} - BiblioRuche{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-vote-yea"></i> {{ voting_session.title }}</h4>
+                <small class="text-muted">
+                    {% if voting_session.status == 'active' %}
+                        <span class="badge bg-success">Actif</span>
+                        Vote ouvert jusqu'au {{ voting_session.end_date.strftime('%d/%m/%Y') }}
+                    {% else %}
+                        <span class="badge bg-secondary">Terminé</span>
+                        Vote terminé le {{ voting_session.end_date.strftime('%d/%m/%Y') }}
+                    {% endif %}
+                </small>
+            </div>
+            <div class="card-body">
+                {% if voting_session.description %}
+                <p>{{ voting_session.description }}</p>
+                {% endif %}
+                
+                {% if current_user.is_authenticated and voting_session.status == 'active' %}
+                <form method="POST" action="{{ url_for('main.submit_vote', vote_id=voting_session.id) }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <h5>Choisissez un ou plusieurs livres :</h5>
+                    <div class="row">
+                        {% for option in voting_session.books %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="vote_option_ids" value="{{ option.id }}" 
+                                               id="book_{{ option.id }}"
+                                               {% if user_votes and option.id in user_votes|map(attribute='vote_option_id')|list %}checked{% endif %}>
+                                        <label class="form-check-label w-100" for="book_{{ option.id }}">
+                                            <h6 class="card-title">{{ option.book.title }}</h6>
+                                            <p class="card-text">
+                                                <strong>Auteur :</strong> {{ option.book.author }}<br>
+                                                {% if option.book.description %}
+                                                {{ option.book.description[:150] }}{% if option.book.description|length > 150 %}...{% endif %}
+                                                {% endif %}
+                                            </p>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-3">
+                        <a href="{{ url_for('main.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Retour
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-vote-yea"></i> 
+                            {% if user_votes %}Modifier les votes{% else %}Voter{% endif %}
+                        </button>
+                    </div>
+                </form>
+                {% endif %}
+                
+                {% if show_results %}
+                <hr>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5><i class="fas fa-chart-bar"></i> Résultats du vote</h5>
+                    {% if current_user.is_authenticated and current_user.is_admin and voting_session.status == 'active' %}
+                    <a href="{{ url_for('main.vote_detail', vote_id=voting_session.id) }}?show_results=1" class="btn btn-sm btn-info">
+                        <i class="fas fa-eye"></i> Afficher les résultats
+                    </a>
+                    {% endif %}
+                </div>
+                
+                {% if results %}
+                <div class="mt-3">
+                    {% for result in results %}
+                    <div class="mb-3">                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <div>
+                                <strong>{{ result.option.book.title }}</strong>
+                                <br><small class="text-muted">par {{ result.option.book.author }}</small>
+                            </div>
+                            <span class="badge bg-primary">{{ result.count }} vote(s) ({{ "%.1f"|format(result.percentage) }}%)</span>
+                        </div>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-primary" 
+                                 role="progressbar" style="width: {{ result.percentage }}%">
+                            </div>
+                        </div>
+                        
+                        {% if current_user.is_authenticated and current_user.is_admin %}
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <strong>Votants :</strong>
+                                {% if result.voters %}
+                                    {% for voter in result.voters %}
+                                        <a href="{{ url_for('main.user_profile', user_id=voter.id) }}" 
+                                           class="text-decoration-none">{{ voter.display_name }}</a>
+                                        {% if not loop.last %}, {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    Aucun vote pour cette option
+                                {% endif %}
+                            </small>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    
+                    {% if voting_session.status == 'closed' and voting_session.winner_book %}
+                    <div class="alert alert-success mt-3">
+                        <i class="fas fa-trophy"></i>
+                        <strong>Livre gagnant :</strong> "{{ voting_session.winner_book.title }}" par {{ voting_session.winner_book.author }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <p class="text-muted">Aucun vote enregistré pour le moment.</p>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

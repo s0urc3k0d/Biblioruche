@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion des utilisateurs - BiblioRuche{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2><i class="fas fa-users"></i> Gestion des utilisateurs</h2>
+        <p class="text-muted">Administration des membres de la communauté BiblioRuche</p>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-friends"></i> 
+                        Utilisateurs ({{ users|length }})
+                    </h5>
+                    <div>
+                        <span class="badge bg-primary">{{ users|selectattr('is_admin')|list|length }} Admin(s)</span>
+                        <span class="badge bg-secondary">{{ users|rejectattr('is_admin')|list|length }} Lecteur(s)</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if users %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Utilisateur</th>
+                                <th>Nom d'affichage</th>
+                                <th>Rôle</th>
+                                <th>Inscription</th>
+                                <th>Activité</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr {% if user.is_admin %}class="table-primary"{% endif %}>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if user.avatar_url %}
+                                        <img src="{{ user.avatar_url }}" alt="Avatar" 
+                                             class="rounded-circle me-2" width="32" height="32">
+                                        {% else %}
+                                        <div class="bg-secondary rounded-circle me-2 d-flex align-items-center justify-content-center" 
+                                             style="width: 32px; height: 32px;">
+                                            <i class="fas fa-user text-white"></i>
+                                        </div>
+                                        {% endif %}
+                                        <div>
+                                            <strong>{{ user.username }}</strong>
+                                            {% if user.email %}
+                                            <br><small class="text-muted">{{ user.email }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><a href="{{ url_for('main.user_profile', user_id=user.id) }}" 
+                                      class="text-decoration-none">{{ user.display_name }}</a></td>
+                                <td>
+                                    {% if user.is_admin %}
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-crown"></i> Administrateur
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-book"></i> Lecteur
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small>
+                                        {{ user.created_at.strftime('%d/%m/%Y') }}
+                                        <br>{{ user.created_at.strftime('%H:%M') }}
+                                    </small>
+                                </td>
+                                <td>
+                                    <div>                                        <small class="text-muted">
+                                            <i class="fas fa-lightbulb"></i> 
+                                            {{ user.book_proposals|length }} proposition(s)
+                                        </small>
+                                        <br>
+                                        <small class="text-muted">
+                                            <i class="fas fa-vote-yea"></i> 
+                                            {{ user.votes|length }} vote(s)
+                                        </small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        {% if user.id != current_user.id %}
+                                        <a href="{{ url_for('admin.toggle_admin', user_id=user.id) }}" 
+                                           class="btn btn-outline-{% if user.is_admin %}warning{% else %}primary{% endif %}"
+                                           onclick="return confirm('{% if user.is_admin %}Retirer les droits administrateur à{% else %}Donner les droits administrateur à{% endif %} {{ user.display_name }} ?')"
+                                           title="{% if user.is_admin %}Retirer admin{% else %}Promouvoir admin{% endif %}">
+                                            {% if user.is_admin %}
+                                            <i class="fas fa-user-minus"></i>
+                                            {% else %}
+                                            <i class="fas fa-user-plus"></i>
+                                            {% endif %}
+                                        </a>
+                                        {% else %}
+                                        <span class="btn btn-outline-secondary btn-sm disabled">
+                                            <i class="fas fa-user-shield"></i> Vous
+                                        </span>
+                                        {% endif %}
+                                        
+                                        <button type="button" class="btn btn-outline-info" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#userModal{{ user.id }}"
+                                                title="Voir détails">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Aucun utilisateur</h5>
+                    <p class="text-muted">Les utilisateurs apparaîtront ici après leur première connexion.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistiques -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body text-center">
+                <h4>{{ users|length }}</h4>
+                <p class="mb-0">Total utilisateurs</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-danger">
+            <div class="card-body text-center">
+                <h4>{{ users|selectattr('is_admin')|list|length }}</h4>
+                <p class="mb-0">Administrateurs</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body text-center">
+                <h4>{{ users|rejectattr('is_admin')|list|length }}</h4>
+                <p class="mb-0">Lecteurs</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body text-center">
+                <h4>{{ users|selectattr('proposals')|list|length }}</h4>
+                <p class="mb-0">Contributeurs actifs</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modales de détail des utilisateurs -->
+{% for user in users %}
+<div class="modal fade" id="userModal{{ user.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    {% if user.avatar_url %}
+                    <img src="{{ user.avatar_url }}" alt="Avatar" 
+                         class="rounded-circle me-2" width="32" height="32">
+                    {% endif %}
+                    {{ user.display_name }}
+                    {% if user.is_admin %}
+                    <span class="badge bg-danger ms-2">Admin</span>
+                    {% endif %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Informations générales</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Nom d'utilisateur :</strong> {{ user.username }}</li>
+                            <li><strong>Nom d'affichage :</strong> {{ user.display_name }}</li>
+                            {% if user.email %}
+                            <li><strong>Email :</strong> {{ user.email }}</li>
+                            {% endif %}
+                            <li><strong>Twitch ID :</strong> {{ user.twitch_id }}</li>
+                            <li><strong>Inscription :</strong> {{ user.created_at.strftime('%d/%m/%Y à %H:%M') }}</li>
+                            <li><strong>Rôle :</strong> 
+                                {% if user.is_admin %}
+                                <span class="badge bg-danger">Administrateur</span>
+                                {% else %}
+                                <span class="badge bg-success">Lecteur</span>
+                                {% endif %}
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">                        <h6>Activité</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Propositions :</strong> {{ user.book_proposals|length }}</li>
+                            <li><strong>Votes :</strong> {{ user.votes|length }}</li>
+                            {% if user.is_admin %}
+                            <li><strong>Lectures créées :</strong> {{ user.created_sessions|length }}</li>
+                            {% endif %}
+                        </ul>
+                          {% if user.book_proposals|length > 0 %}
+                        <h6 class="mt-3">Dernières propositions</h6>
+                        <ul class="list-unstyled">
+                            {% for proposal in user.book_proposals[-3:] %}
+                            <li>
+                                <small>
+                                    <strong>{{ proposal.title }}</strong> - {{ proposal.author }}
+                                    <span class="badge bg-{% if proposal.status == 'approved' %}success{% elif proposal.status == 'rejected' %}danger{% else %}warning{% endif %}">
+                                        {{ proposal.status }}
+                                    </span>
+                                </small>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                {% if user.id != current_user.id %}
+                <a href="{{ url_for('admin.toggle_admin', user_id=user.id) }}" 
+                   class="btn btn-{% if user.is_admin %}warning{% else %}primary{% endif %}"
+                   onclick="return confirm('{% if user.is_admin %}Retirer les droits administrateur à{% else %}Donner les droits administrateur à{% endif %} {{ user.display_name }} ?')">
+                    {% if user.is_admin %}
+                    <i class="fas fa-user-minus"></i> Retirer admin
+                    {% else %}
+                    <i class="fas fa-user-plus"></i> Promouvoir admin
+                    {% endif %}
+                </a>
+                {% endif %}
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<div class="row mt-4">
+    <div class="col-12 text-center">
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Retour au tableau de bord
+        </a>
+    </div>
+</div>
+{% endblock %}

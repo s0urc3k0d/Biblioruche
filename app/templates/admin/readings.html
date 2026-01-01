@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion des lectures - BiblioRuche{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-book-reader"></i> Gestion des lectures</h2>
+            <a href="{{ url_for('admin.create_reading') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Programmer une lecture
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Lectures en cours -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-play"></i> Lectures en cours ({{ current_readings|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% if current_readings %}
+                <div class="row">
+                    {% for reading in current_readings %}
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card border-success">
+                            <div class="card-body">
+                                <h6 class="card-title">{{ reading.book.title }}</h6>
+                                <p class="card-text">
+                                    <strong>Auteur :</strong> {{ reading.book.author }}<br>
+                                    <strong>Début :</strong> {{ reading.start_date.strftime('%d/%m/%Y') }}<br>
+                                    <strong>Fin prévue :</strong> {{ reading.end_date.strftime('%d/%m/%Y') }}
+                                    {% if reading.debrief_date %}
+                                    <br><strong>Débrief :</strong> {{ reading.debrief_date.strftime('%d/%m/%Y') }}
+                                    {% endif %}
+                                </p>                                {% if reading.description %}
+                                <p class="card-text"><small class="text-muted">{{ reading.description[:100] }}{% if reading.description|length > 100 %}...{% endif %}</small></p>
+                                {% endif %}
+                                <div class="btn-group btn-group-sm w-100 mb-2">
+                                    <a href="{{ url_for('admin.edit_reading', reading_id=reading.id) }}" 
+                                       class="btn btn-outline-primary" title="Modifier">
+                                        <i class="fas fa-edit"></i> Modifier
+                                    </a>
+                                    <a href="{{ url_for('admin.complete_reading', reading_id=reading.id) }}" 
+                                       class="btn btn-success"
+                                       onclick="return confirm('Marquer cette lecture comme terminée ?')">
+                                        <i class="fas fa-check"></i> Terminer
+                                    </a>
+                                </div>
+                                <div class="btn-group btn-group-sm w-100">
+                                    <a href="{{ url_for('admin.archive_reading', reading_id=reading.id) }}" 
+                                       class="btn btn-secondary"
+                                       onclick="return confirm('Archiver cette lecture ?')">
+                                        <i class="fas fa-archive"></i> Archiver
+                                    </a>
+                                    <a href="{{ url_for('admin.delete_reading', reading_id=reading.id) }}" 
+                                       class="btn btn-outline-danger" title="Supprimer"
+                                       onclick="return confirm('Supprimer définitivement cette lecture ?')">
+                                        <i class="fas fa-trash"></i> Supprimer
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Aucune lecture en cours</h5>
+                    <p class="text-muted">Les lectures actives apparaîtront ici.</p>
+                    <a href="{{ url_for('admin.create_reading') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Programmer une lecture
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lectures à venir -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-clock"></i> Lectures à venir ({{ upcoming_readings|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% if upcoming_readings %}
+                <div class="row">
+                    {% for reading in upcoming_readings %}
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card border-warning">
+                            <div class="card-body">
+                                <h6 class="card-title">{{ reading.book.title }}</h6>
+                                <p class="card-text">
+                                    <strong>Auteur :</strong> {{ reading.book.author }}<br>
+                                    <strong>Début prévu :</strong> {{ reading.start_date.strftime('%d/%m/%Y') }}<br>
+                                    <strong>Fin prévue :</strong> {{ reading.end_date.strftime('%d/%m/%Y') }}
+                                </p>                                {% if reading.description %}
+                                <p class="card-text"><small class="text-muted">{{ reading.description[:100] }}{% if reading.description|length > 100 %}...{% endif %}</small></p>
+                                {% endif %}
+                                <div class="btn-group btn-group-sm w-100 mb-2">
+                                    <a href="{{ url_for('admin.edit_reading', reading_id=reading.id) }}" 
+                                       class="btn btn-outline-primary" title="Modifier">
+                                        <i class="fas fa-edit"></i> Modifier
+                                    </a>
+                                    <a href="{{ url_for('admin.start_reading', reading_id=reading.id) }}" 
+                                       class="btn btn-outline-success" title="Commencer maintenant"
+                                       onclick="return confirm('Commencer cette lecture maintenant ?')">
+                                        <i class="fas fa-play"></i> Commencer
+                                    </a>
+                                </div>
+                                <div class="btn-group btn-group-sm w-100">
+                                    <a href="{{ url_for('admin.delete_reading', reading_id=reading.id) }}" 
+                                       class="btn btn-outline-danger" title="Supprimer"
+                                       onclick="return confirm('Supprimer définitivement cette lecture ?')">
+                                        <i class="fas fa-trash"></i> Supprimer
+                                    </a>
+                                </div>
+                                <small class="text-muted">
+                                    <i class="fas fa-user"></i> Programmé par <a href="{{ url_for('main.user_profile', user_id=reading.creator.id) }}" 
+                                                                        class="text-decoration-none">{{ reading.creator.display_name }}</a>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-calendar-plus fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Aucune lecture programmée</h5>
+                    <p class="text-muted">Les futures lectures apparaîtront ici.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lectures terminées -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-check-circle"></i> Lectures terminées ({{ completed_readings|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% if completed_readings %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Livre</th>
+                                <th>Auteur</th>
+                                <th>Période</th>
+                                <th>Débrief</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for reading in completed_readings %}
+                            <tr>
+                                <td>{{ reading.book.title }}</td>
+                                <td>{{ reading.book.author }}</td>
+                                <td>
+                                    {{ reading.start_date.strftime('%d/%m/%Y') }} - 
+                                    {{ reading.end_date.strftime('%d/%m/%Y') }}
+                                </td>
+                                <td>
+                                    {% if reading.debrief_date %}
+                                    {{ reading.debrief_date.strftime('%d/%m/%Y') }}
+                                    {% else %}
+                                    <span class="text-muted">Pas de débrief</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('admin.archive_reading', reading_id=reading.id) }}" 
+                                       class="btn btn-outline-secondary btn-sm"
+                                       onclick="return confirm('Archiver cette lecture ?')">
+                                        <i class="fas fa-archive"></i> Archiver
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-medal fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Aucune lecture terminée</h5>
+                    <p class="text-muted">L'historique des lectures terminées apparaîtra ici.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lectures archivées -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="fas fa-archive"></i> Lectures archivées ({{ archived_readings|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% if archived_readings %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Livre</th>
+                                <th>Auteur</th>
+                                <th>Période</th>
+                                <th>Proposé par</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for reading in archived_readings %}
+                            <tr>
+                                <td>{{ reading.book.title }}</td>
+                                <td>{{ reading.book.author }}</td>
+                                <td>
+                                    {{ reading.start_date.strftime('%d/%m/%Y') }} - 
+                                    {{ reading.end_date.strftime('%d/%m/%Y') }}
+                                </td>
+                                <td><a href="{{ url_for('main.user_profile', user_id=reading.book.proposer.id) }}" 
+                                      class="text-decoration-none">{{ reading.book.proposer.display_name }}</a></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-box fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Aucune lecture archivée</h5>
+                    <p class="text-muted">Les lectures archivées apparaîtront ici.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12 text-center">
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Retour au tableau de bord
+        </a>
+    </div>
+</div>
+{% endblock %}

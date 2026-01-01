@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Diagnostic - BiblioRuche{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-stethoscope"></i> Diagnostic de Configuration</h4>
+            </div>
+            <div class="card-body">
+                <h5>Configuration Twitch OAuth</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <tr>
+                            <td><strong>Client ID</strong></td>
+                            <td>
+                                {% if config.TWITCH_CLIENT_ID %}
+                                <span class="badge bg-success">✓ Configuré</span>
+                                <code>{{ config.TWITCH_CLIENT_ID[:8] }}...</code>
+                                {% else %}
+                                <span class="badge bg-danger">✗ Manquant</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Client Secret</strong></td>
+                            <td>
+                                {% if config.TWITCH_CLIENT_SECRET %}
+                                <span class="badge bg-success">✓ Configuré</span>
+                                {% else %}
+                                <span class="badge bg-danger">✗ Manquant</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Redirect URI</strong></td>
+                            <td>
+                                {% if config.TWITCH_REDIRECT_URI %}
+                                <span class="badge bg-success">✓ Configuré</span>
+                                <code>{{ config.TWITCH_REDIRECT_URI }}</code>
+                                {% else %}
+                                <span class="badge bg-danger">✗ Manquant</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <h5 class="mt-4">Configuration Flask</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <tr>
+                            <td><strong>Secret Key</strong></td>
+                            <td>
+                                {% if config.SECRET_KEY and config.SECRET_KEY != 'dev-secret-key' %}
+                                <span class="badge bg-success">✓ Configuré</span>
+                                {% else %}
+                                <span class="badge bg-warning">⚠ Par défaut</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Debug Mode</strong></td>
+                            <td>
+                                {% if config.DEBUG %}
+                                <span class="badge bg-info">Activé</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Désactivé</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <h5 class="mt-4">Administrateurs</h5>
+                <div class="mb-3">
+                    {% if config.ADMIN_USERNAMES %}
+                    <p>Utilisateurs configurés comme administrateurs :</p>
+                    <ul>
+                        {% for admin in config.ADMIN_USERNAMES %}
+                        <li><code>{{ admin }}</code></li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <span class="badge bg-warning">Aucun administrateur configuré</span>
+                    {% endif %}
+                </div>
+
+                <h5 class="mt-4">Session</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <tr>
+                            <td><strong>OAuth State</strong></td>
+                            <td>
+                                {% if session.oauth_state %}
+                                <span class="badge bg-success">✓ Présent</span>
+                                <code>{{ session.oauth_state[:8] }}...</code>
+                                {% else %}
+                                <span class="badge bg-secondary">Aucun</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="mt-4">
+                    <h5>Actions de test</h5>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-primary">
+                            <i class="fab fa-twitch"></i> Tester la connexion Twitch
+                        </a>
+                        <a href="{{ url_for('main.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-home"></i> Retour à l'accueil
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

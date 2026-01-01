@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Diagnostic OAuth - BiblioRuche{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>🔍 Diagnostic OAuth Twitch</h1>
+    
+    <div class="alert alert-info">
+        <strong>Information :</strong> Cette page aide à diagnostiquer les problèmes d'authentification Twitch OAuth.
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Configuration Actuelle</h3>
+                </div>
+                <div class="card-body">
+                    <table class="table table-striped">
+                        {% for key, value in debug_data.config.items() %}
+                        <tr>
+                            <td><strong>{{ key }}</strong></td>
+                            <td><code>{{ value }}</code></td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Test URI de Redirection</h3>
+                </div>
+                <div class="card-body">
+                    <p><strong>URI configurée :</strong></p>
+                    <code>{{ debug_data.discrepancy.configured }}</code>
+                    
+                    <p class="mt-3"><strong>URI générée automatiquement :</strong></p>
+                    <code>{{ debug_data.discrepancy.actual }}</code>
+                    
+                    <div class="mt-3">
+                        {% if debug_data.uri_match %}
+                        <div class="alert alert-success">
+                            ✅ <strong>Correspondance :</strong> Les URIs correspondent !
+                        </div>
+                        {% else %}
+                        <div class="alert alert-danger">
+                            ❌ <strong>Problème détecté :</strong> Les URIs ne correspondent pas !
+                            <br><small>Ceci est probablement la cause de l'erreur "redirect_mismatch".</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Solutions Recommandées</h3>
+                </div>
+                <div class="card-body">
+                    {% if not debug_data.uri_match %}
+                    <div class="alert alert-warning">
+                        <h4>🔧 Correction nécessaire :</h4>
+                        <ol>
+                            <li>Mettez à jour le fichier <code>.env</code> avec la bonne URI :</li>
+                            <pre><code>TWITCH_REDIRECT_URI={{ debug_data.discrepancy.actual }}</code></pre>
+                            
+                            <li><strong>OU</strong> Mettez à jour votre application Twitch sur <a href="https://dev.twitch.tv/console/apps" target="_blank">https://dev.twitch.tv/console/apps</a> avec :</li>
+                            <pre><code>{{ debug_data.discrepancy.actual }}</code></pre>
+                        </ol>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-success">
+                        <h4>✅ Configuration correcte</h4>
+                        <p>Les URIs correspondent. Le problème pourrait venir d'ailleurs :</p>
+                        <ul>
+                            <li>Vérifiez que votre application Twitch est bien configurée</li>
+                            <li>Vérifiez que le TWITCH_CLIENT_ID est correct</li>
+                            <li>Assurez-vous que l'application Twitch n'est pas en mode de développement avec des restrictions</li>
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-4">
+        <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Retour à l'accueil</a>
+        <a href="{{ url_for('auth.login') }}" class="btn btn-primary">Tester la connexion</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,790 @@
+/* BiblioRuche Custom Styles */
+
+:root {
+    --primary-color: #6c5ce7;
+    --secondary-color: #fd79a8;
+    --success-color: #00b894;
+    --warning-color: #fdcb6e;
+    --danger-color: #e17055;
+    --dark-color: #2d3436;
+    --light-color: #ddd;
+    
+    /* Light theme variables */
+    --bg-color: #f8f9fa;
+    --text-color: #212529;
+    --card-bg: #ffffff;
+    --navbar-bg: #ffffff;
+    --border-color: #dee2e6;
+}
+
+[data-theme="dark"] {
+    /* Dark theme variables */
+    --bg-color: #121212;
+    --text-color: #e1e1e1;
+    --card-bg: #1e1e1e;
+    --navbar-bg: #1a1a1a;
+    --border-color: #333333;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+.jumbotron {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 15px;
+}
+
+.card {
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease-in-out;
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .card {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+[data-theme="dark"] .card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+}
+
+.btn {
+    border-radius: 25px;
+    padding: 8px 20px;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), #5a4fcf);
+    border: none;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, var(--success-color), #00a085);
+    border: none;
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, var(--warning-color), #e1b12c);
+    border: none;
+    color: white;
+}
+
+.progress {
+    border-radius: 10px;
+}
+
+.progress-bar {
+    border-radius: 10px;
+}
+
+.badge {
+    border-radius: 15px;
+    padding: 5px 10px;
+}
+
+.alert {
+    border-radius: 10px;
+    border: none;
+}
+
+.form-control {
+    border-radius: 8px;
+    border: 1px solid #e0e6ed;
+    padding: 10px 15px;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(108, 92, 231, 0.25);
+}
+
+.list-group-item {
+    border-left: none;
+    border-right: none;
+}
+
+.list-group-item:first-child {
+    border-top: none;
+}
+
+.list-group-item:last-child {
+    border-bottom: none;
+}
+
+/* Animation pour les cartes */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+/* Styles pour les avatars */
+.rounded-circle {
+    border: 2px solid white;
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+    .jumbotron {
+        padding: 2rem 1rem;
+    }
+    
+    .btn-group-sm .btn {
+        padding: 4px 8px;
+        font-size: 0.8rem;
+    }
+}
+
+/* Styles pour les votes */
+.form-check-input:checked {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+}
+
+.form-check-label {
+    cursor: pointer;
+}
+
+/* Footer styles */
+footer {
+    margin-top: auto;
+}
+
+/* Loading animation */
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #5a4fcf;
+}
+
+/* Book cards styles */
+.book-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.book-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.book-card .card-title {
+    font-weight: 600;
+    color: inherit !important;
+}
+
+.book-card:hover .card-title {
+    color: var(--primary-color) !important;
+}
+
+[data-theme="dark"] .book-card .card-title {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .book-card:hover .card-title {
+    color: var(--primary-color) !important;
+}
+
+[data-theme="dark"] .book-card .text-dark {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .card-title {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .card-header h3,
+[data-theme="dark"] .card-header h4,
+[data-theme="dark"] .card-header h5,
+[data-theme="dark"] .card-header h6 {
+    color: #ffffff !important;
+}
+
+/* Badge styles */
+.badge-lg {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+}
+
+/* Breadcrumb styles */
+.breadcrumb {
+    background-color: transparent;
+    border-radius: 8px;
+    padding: 0.5rem 0;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    color: var(--primary-color);
+}
+
+/* Book detail page styles */
+.book-detail-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border-radius: 10px 10px 0 0;
+}
+
+.book-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.5rem;
+}
+
+/* Link styles */
+a.text-decoration-none:hover {
+    text-decoration: none !important;
+}
+
+/* Dark theme specific styles */
+[data-theme="dark"] .navbar {
+    background-color: var(--navbar-bg) !important;
+}
+
+[data-theme="dark"] .navbar-dark .navbar-nav .nav-link {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .navbar-dark .navbar-brand {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .form-control {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .form-control:focus {
+    background-color: var(--card-bg);
+    border-color: var(--primary-color);
+    color: var(--text-color);
+    box-shadow: 0 0 0 0.2rem rgba(108, 92, 231, 0.25);
+}
+
+[data-theme="dark"] .form-control::placeholder {
+    color: #888;
+}
+
+[data-theme="dark"] .breadcrumb {
+    background-color: var(--card-bg);
+}
+
+[data-theme="dark"] .breadcrumb-item + .breadcrumb-item::before {
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .breadcrumb-item.active {
+    color: #cccccc;
+}
+
+[data-theme="dark"] .breadcrumb-item a {
+    color: #74b9ff;
+}
+
+[data-theme="dark"] .list-group-item {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .alert {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .alert-success {
+    background-color: #1e3a2e;
+    border-color: #2d5a3d;
+    color: #85e085;
+}
+
+[data-theme="dark"] .alert-warning {
+    background-color: #3d3a1e;
+    border-color: #5a522d;
+    color: #ffeb3b;
+}
+
+[data-theme="dark"] .alert-danger {
+    background-color: #3a1e1e;
+    border-color: #5a2d2d;
+    color: #ff8a80;
+}
+
+[data-theme="dark"] .alert-info {
+    background-color: #1e2a3a;
+    border-color: #2d3e5a;
+    color: #81d4fa;
+}
+
+[data-theme="dark"] .modal-content {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .modal-header {
+    border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .modal-footer {
+    border-top-color: var(--border-color);
+}
+
+[data-theme="dark"] .btn-outline-secondary {
+    color: #cccccc;
+    border-color: #666666;
+}
+
+[data-theme="dark"] .btn-outline-secondary:hover {
+    color: #000000;
+    background-color: #cccccc;
+    border-color: #cccccc;
+}
+
+[data-theme="dark"] .btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+[data-theme="dark"] .btn-outline-primary:hover {
+    color: #ffffff;
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+[data-theme="dark"] .text-muted {
+    color: #999999 !important;
+}
+
+[data-theme="dark"] .text-secondary {
+    color: #aaaaaa !important;
+}
+
+[data-theme="dark"] .dropdown-menu {
+    background-color: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .dropdown-item {
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .dropdown-item:hover,
+[data-theme="dark"] .dropdown-item:focus {
+    background-color: #333333;
+    color: var(--text-color);
+}
+
+/* Dark mode toggle button */
+.theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1050;
+    background: var(--primary-color);
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.theme-toggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+}
+
+[data-theme="dark"] .theme-toggle {
+    background: var(--warning-color);
+}
+
+/* Links in dark mode */
+[data-theme="dark"] a {
+    color: #64b5f6;
+}
+
+[data-theme="dark"] a:hover {
+    color: #42a5f5;
+}
+
+[data-theme="dark"] .nav-link {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .nav-link:hover {
+    color: #64b5f6 !important;
+}
+
+/* Table styles in dark mode */
+[data-theme="dark"] .table {
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > td {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Tab styles in dark mode */
+[data-theme="dark"] .nav-tabs {
+    border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .nav-tabs .nav-link {
+    color: #cccccc;
+    background-color: transparent;
+    border-color: transparent;
+}
+
+[data-theme="dark"] .nav-tabs .nav-link:hover {
+    border-color: var(--border-color);
+    color: #ffffff;
+}
+
+[data-theme="dark"] .nav-tabs .nav-link.active {
+    color: #ffffff;
+    background-color: var(--card-bg);
+    border-color: var(--border-color) var(--border-color) var(--card-bg);
+}
+
+[data-theme="dark"] .tab-content {
+    background-color: transparent;
+}
+
+/* Badge improvements for dark mode */
+[data-theme="dark"] .badge.bg-warning {
+    color: #000000 !important;
+}
+
+[data-theme="dark"] .badge.bg-light {
+    background-color: #555555 !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .badge.bg-secondary {
+    background-color: #666666 !important;
+    color: #ffffff !important;
+}
+
+/* Footer improvements */
+[data-theme="dark"] footer {
+    background-color: var(--navbar-bg) !important;
+    border-top: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] footer .text-light {
+    color: var(--text-color) !important;
+}
+
+[data-theme="dark"] footer .text-muted {
+    color: #888888 !important;
+}
+
+/* General heading styles for dark mode */
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6 {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .display-1,
+[data-theme="dark"] .display-2,
+[data-theme="dark"] .display-3,
+[data-theme="dark"] .display-4,
+[data-theme="dark"] .display-5,
+[data-theme="dark"] .display-6 {
+    color: #ffffff !important;
+}
+
+/* Admin interface specific improvements */
+[data-theme="dark"] .table th {
+    color: #ffffff !important;
+    background-color: #2a2a2a !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .table td {
+    color: var(--text-color) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .table-hover tbody tr:hover {
+    background-color: #2a2a2a !important;
+}
+
+/* Card header improvements */
+[data-theme="dark"] .card-header {
+    background-color: #2a2a2a !important;
+    border-bottom-color: var(--border-color) !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .card-body h1,
+[data-theme="dark"] .card-body h2,
+[data-theme="dark"] .card-body h3,
+[data-theme="dark"] .card-body h4,
+[data-theme="dark"] .card-body h5,
+[data-theme="dark"] .card-body h6 {
+    color: #ffffff !important;
+}
+
+/* Form labels improvements */
+[data-theme="dark"] .form-label {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] label {
+    color: #ffffff !important;
+}
+
+/* Strong and emphasis elements */
+[data-theme="dark"] strong,
+[data-theme="dark"] b {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] small {
+    color: #cccccc !important;
+}
+
+/* List improvements */
+[data-theme="dark"] .list-group-item strong {
+    color: #ffffff !important;
+}
+
+/* Jumbotron/hero section improvements */
+[data-theme="dark"] .jumbotron h1,
+[data-theme="dark"] .jumbotron h2,
+[data-theme="dark"] .jumbotron h3,
+[data-theme="dark"] .jumbotron p {
+    color: #ffffff !important;
+}
+
+/* Text utilities override */
+[data-theme="dark"] .text-dark {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .text-body {
+    color: var(--text-color) !important;
+}
+
+/* Card text improvements */
+[data-theme="dark"] .card-text {
+    color: var(--text-color) !important;
+}
+
+[data-theme="dark"] .card-subtitle {
+    color: #cccccc !important;
+}
+
+/* Admin interface button improvements */
+[data-theme="dark"] .btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), #5a4fcf);
+    border: none;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .btn-primary:hover {
+    background: linear-gradient(135deg, #5a4fcf, var(--primary-color));
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .btn-success {
+    background: linear-gradient(135deg, var(--success-color), #00a085);
+    border: none;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .btn-success:hover {
+    background: linear-gradient(135deg, #00a085, var(--success-color));
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .btn-warning {
+    background: linear-gradient(135deg, var(--warning-color), #e1b12c);
+    border: none;
+    color: #000000 !important;
+}
+
+[data-theme="dark"] .btn-warning:hover {
+    background: linear-gradient(135deg, #e1b12c, var(--warning-color));
+    color: #000000 !important;
+}
+
+[data-theme="dark"] .btn-danger {
+    background: linear-gradient(135deg, var(--danger-color), #d63031);
+    border: none;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .btn-danger:hover {
+    background: linear-gradient(135deg, #d63031, var(--danger-color));
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .btn-info {
+    background: linear-gradient(135deg, #00cec9, #00b7b8);
+    border: none;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .btn-info:hover {
+    background: linear-gradient(135deg, #00b7b8, #00cec9);
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .btn-dark {
+    background: linear-gradient(135deg, #636e72, #2d3436);
+    border: none;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .btn-dark:hover {
+    background: linear-gradient(135deg, #2d3436, #636e72);
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .btn-light {
+    background: linear-gradient(135deg, #ddd, #b2bec3);
+    border: none;
+    color: #000000 !important;
+}
+
+[data-theme="dark"] .btn-light:hover {
+    background: linear-gradient(135deg, #b2bec3, #ddd);
+    color: #000000 !important;
+}
+
+[data-theme="dark"] .btn-secondary {
+    background: linear-gradient(135deg, #636e72, #74b9ff);
+    border: none;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .btn-secondary:hover {
+    background: linear-gradient(135deg, #74b9ff, #636e72);
+    color: #ffffff !important;
+}
+
+/* Button sizes and additional styles */
+[data-theme="dark"] .btn-lg {
+    color: inherit !important;
+}
+
+[data-theme="dark"] .btn-sm {
+    color: inherit !important;
+}
+
+/* Specific admin dashboard buttons */
+[data-theme="dark"] .card .btn {
+    font-weight: 600;
+}
+
+[data-theme="dark"] .card .btn i {
+    margin-right: 8px;
+}
+
+/* Book detail page specific improvements for dark mode */
+[data-theme="dark"] .book-detail .text-muted {
+    color: #bbbbbb !important;
+}
+
+[data-theme="dark"] .book-detail h5.text-muted {
+    color: #dddddd !important;
+}
+
+[data-theme="dark"] .book-detail small.text-muted {
+    color: #cccccc !important;
+}
+
+[data-theme="dark"] .book-detail strong {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .book-detail .text-justify {
+    color: var(--text-color) !important;
+}
+
+/* General book detail improvements */
+[data-theme="dark"] .card-body .text-muted {
+    color: #bbbbbb !important;
+}
+
+[data-theme="dark"] .card-body h5.text-muted {
+    color: #dddddd !important;
+}
+
+[data-theme="dark"] .card-body small.text-muted {
+    color: #cccccc !important;
+}
+
+[data-theme="dark"] .card-body .text-justify {
+    color: var(--text-color) !important;
+}
+
+[data-theme="dark"] .card-body p {
+    color: var(--text-color) !important;
+}
+
+/* Session cards in book detail */
+[data-theme="dark"] .card .card-body .text-muted {
+    color: #bbbbbb !important;
+}
+
+[data-theme="dark"] .card .card-body small.text-muted {
+    color: #cccccc !important;
+}
+
+[data-theme="dark"] .card .card-body p.small {
+    color: #cccccc !important;
+}

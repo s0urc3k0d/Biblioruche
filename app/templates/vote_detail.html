@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Vote - {{ voting_session.title }} - BiblioRuche{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-vote-yea"></i> {{ voting_session.title }}</h4>                <small class="text-muted">
+                    {% if voting_session.status == 'active' %}
+                        <span class="badge bg-success">Actif</span>
+                        Vote ouvert jusqu'au {{ voting_session.end_date.strftime('%d/%m/%Y') }}
+                    {% else %}
+                        <span class="badge bg-secondary">Terminé</span>
+                        Vote terminé le {{ voting_session.end_date.strftime('%d/%m/%Y') }}
+                    {% endif %}
+                </small>
+            </div>
+            <div class="card-body">
+                {% if voting_session.description %}
+                <p>{{ voting_session.description }}</p>
+                {% endif %}
+                
+                {% if not current_user.is_authenticated %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    Vous devez être connecté pour participer au vote.
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-sm btn-primary ms-2">
+                        <i class="fab fa-twitch"></i> Se connecter
+                    </a>
+                </div>
+                {% elif voting_session.status != 'active' %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Ce vote est terminé.
+                </div>
+                {% elif user_votes %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    Vous avez déjà voté {{ user_votes|length }} fois ! Vous pouvez voter à nouveau pour le même livre ou un autre.
+                    <div class="mt-2">
+                        <small><strong>Vos votes :</strong></small>
+                        {% for vote in user_votes %}
+                        <span class="badge bg-secondary me-1">{{ vote.vote_option.book.title }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if current_user.is_authenticated and voting_session.status == 'active' %}
+                <form method="POST" action="{{ url_for('main.submit_vote', vote_id=voting_session.id) }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <h5>Choisissez votre livre préféré :</h5>
+                    <div class="row">
+                        {% for option in voting_session.books %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="vote_option_id" value="{{ option.id }}" 
+                                               id="book_{{ option.id }}">
+                                        <label class="form-check-label w-100" for="book_{{ option.id }}">
+                                            <h6 class="card-title">{{ option.book.title }}</h6>
+                                            <p class="card-text">
+                                                <strong>Auteur :</strong> {{ option.book.author }}<br>
+                                                {% if option.book.publication_year %}
+                                                <strong>Année :</strong> {{ option.book.publication_year }}<br>
+                                                {% endif %}
+                                                {% if option.book.page_count %}
+                                                <strong>Pages :</strong> {{ option.book.page_count }}<br>
+                                                {% endif %}                                                <small class="text-muted">
+                                                    Proposé par <a href="{{ url_for('main.user_profile', user_id=option.book.proposer.id) }}" 
+                                                                  class="text-decoration-none">{{ option.book.proposer.display_name }}</a>
+                                                </small>
+                                            </p>
+                                            {% if option.book.description %}
+                                            <p class="card-text small">{{ option.book.description[:150] }}{% if option.book.description|length > 150 %}...{% endif %}</p>
+                                            {% endif %}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-3">
+                        <a href="{{ url_for('main.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Retour
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-vote-yea"></i> 
+                            Ajouter mon vote
+                        </button>
+                    </div>
+                </form>
+                {% endif %}
+                
+                {% if show_results %}
+                <hr>
+                <h5><i class="fas fa-chart-bar"></i> Résultats du vote</h5>
+                {% if results %}                <div class="mt-3">
+                    {% for result in results %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <strong>{{ result.option.book.title }}</strong>
+                            <span class="badge bg-primary">{{ result.count }} vote{{ 's' if result.count > 1 else '' }} ({{ "%.1f"|format(result.percentage) }}%)</span>
+                        </div>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-primary" 
+                                 role="progressbar" style="width: {{ result.percentage }}%">
+                                {{ result.option.book.author }}
+                            </div>
+                        </div>
+                        
+                        {% if current_user.is_authenticated and current_user.is_admin %}
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <strong>Votants :</strong>
+                                {% if result.voters %}
+                                    {% for voter in result.voters %}
+                                        <a href="{{ url_for('main.user_profile', user_id=voter.id) }}" 
+                                           class="text-decoration-none">{{ voter.display_name }}</a>{% if not loop.last %}, {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    Aucun vote
+                                {% endif %}
+                            </small>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    
+                    {% if voting_session.status == 'closed' and voting_session.winner_book %}
+                    <div class="alert alert-success mt-3">
+                        <i class="fas fa-trophy"></i>
+                        <strong>Livre gagnant :</strong> "{{ voting_session.winner_book.title }}" par {{ voting_session.winner_book.author }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <p class="text-muted">Aucun vote enregistré pour le moment.</p>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

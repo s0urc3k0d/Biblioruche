@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}Accueil - BiblioRuche{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="jumbotron bg-primary text-white p-5 rounded mb-4">
+            <h1 class="display-4">Bienvenue dans BiblioRuche 📚</h1>
+            <p class="lead">La bibliothèque numérique collaborative de l'Essaim Littéraire</p>
+            <hr class="my-4">
+            <p>Proposez des livres, participez aux votes et suivez les lectures communes de la communauté !</p>
+            {% if not current_user.is_authenticated %}
+            <a class="btn btn-light btn-lg" href="{{ url_for('auth.login') }}" role="button">
+                <i class="fab fa-twitch"></i> Rejoindre avec Twitch
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    {% if current_reading %}
+    <div class="col-md-6 mb-4">
+        <div class="card border-success">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-book-open"></i> Lecture en cours</h5>
+            </div>
+            <div class="card-body">
+                <h6 class="card-title">{{ current_reading.book.title }}</h6>
+                <p class="card-text">
+                    <strong>Auteur :</strong> {{ current_reading.book.author }}<br>
+                    <strong>Fin prévue :</strong> {{ current_reading.end_date.strftime('%d/%m/%Y') }}
+                    {% if current_reading.debrief_date %}
+                    <br><strong>Live débrief :</strong> {{ current_reading.debrief_date.strftime('%d/%m/%Y') }}
+                    {% endif %}
+                </p>                {% if current_reading.description %}
+                <p class="card-text">{{ current_reading.description }}</p>
+                {% endif %}
+                
+                <!-- Participants à la lecture en cours -->
+                <div class="mt-3">
+                    <small class="text-muted">
+                        <i class="fas fa-users"></i> {{ current_reading.get_participants_count() }} participant{{ 's' if current_reading.get_participants_count() != 1 else '' }}
+                        {% if current_user.is_authenticated and current_reading.is_user_registered(current_user.id) %}
+                            <span class="text-success">• Vous participez</span>
+                        {% endif %}
+                    </small>
+                </div>
+                
+                <div class="mt-3">
+                    <a href="{{ url_for('main.reading_detail', reading_id=current_reading.id) }}" 
+                       class="btn btn-sm btn-outline-success">
+                        <i class="fas fa-eye"></i> Voir les détails
+                    </a>
+                    {% if current_user.is_authenticated %}
+                        {% if current_reading.is_user_registered(current_user.id) %}
+                            <span class="btn btn-sm btn-success disabled">
+                                <i class="fas fa-check"></i> Vous participez
+                            </span>
+                        {% else %}
+                            <a href="{{ url_for('main.register_for_reading', reading_id=current_reading.id) }}" 
+                               class="btn btn-sm btn-success">
+                                <i class="fas fa-plus"></i> Rejoindre
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if upcoming_reading %}
+    <div class="col-md-6 mb-4">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-calendar-alt"></i> Prochaine lecture</h5>
+            </div>
+            <div class="card-body">
+                <h6 class="card-title">{{ upcoming_reading.book.title }}</h6>                <p class="card-text">
+                    <strong>Auteur :</strong> {{ upcoming_reading.book.author }}<br>
+                    <strong>Début :</strong> {{ upcoming_reading.start_date.strftime('%d/%m/%Y') }}<br>
+                    <strong>Fin :</strong> {{ upcoming_reading.end_date.strftime('%d/%m/%Y') }}
+                </p>
+                
+                <!-- Participants à la lecture à venir -->
+                <div class="mt-3">
+                    <small class="text-muted">
+                        <i class="fas fa-users"></i> {{ upcoming_reading.get_participants_count() }} participant{{ 's' if upcoming_reading.get_participants_count() != 1 else '' }}
+                        {% if current_user.is_authenticated and upcoming_reading.is_user_registered(current_user.id) %}
+                            <span class="text-success">• Vous participez</span>
+                        {% endif %}
+                    </small>
+                </div>
+                
+                <div class="mt-3">
+                    <a href="{{ url_for('main.reading_detail', reading_id=upcoming_reading.id) }}" 
+                       class="btn btn-sm btn-outline-info">
+                        <i class="fas fa-eye"></i> Voir les détails
+                    </a>
+                    {% if current_user.is_authenticated %}
+                        {% if upcoming_reading.is_user_registered(current_user.id) %}
+                            <span class="btn btn-sm btn-info disabled">
+                                <i class="fas fa-check"></i> Vous participez
+                            </span>
+                        {% else %}
+                            <a href="{{ url_for('main.register_for_reading', reading_id=upcoming_reading.id) }}" 
+                               class="btn btn-sm btn-info">
+                                <i class="fas fa-plus"></i> S'inscrire
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% if active_vote %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-vote-yea"></i> Vote en cours</h5>
+            </div>
+            <div class="card-body">
+                <h6 class="card-title">{{ active_vote.title }}</h6>
+                {% if active_vote.description %}
+                <p class="card-text">{{ active_vote.description }}</p>
+                {% endif %}
+                <p class="card-text">
+                    <strong>Fin du vote :</strong> {{ active_vote.end_date.strftime('%d/%m/%Y') }}
+                </p>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for option in active_vote.books %}
+                    <span class="badge bg-secondary">{{ option.book.title }}</span>
+                    {% endfor %}
+                </div>
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('main.vote_detail', vote_id=active_vote.id) }}" class="btn btn-warning mt-3">
+                    <i class="fas fa-vote-yea"></i> Participer au vote
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row">
+    <div class="col-12">
+        <h3><i class="fas fa-lightbulb"></i> Propositions récentes</h3>
+        {% if recent_proposals %}
+        <div class="row">
+            {% for proposal in recent_proposals %}
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h6 class="card-title">{{ proposal.title }}</h6>
+                        <p class="card-text text-muted">par {{ proposal.author }}</p>
+                        {% if proposal.description %}
+                        <p class="card-text small">{{ proposal.description[:100] }}{% if proposal.description|length > 100 %}...{% endif %}</p>
+                        {% endif %}                        <small class="text-muted">
+                            Proposé par <a href="{{ url_for('main.user_profile', user_id=proposal.proposer.id) }}" 
+                                          class="text-decoration-none">{{ proposal.proposer.display_name }}</a> 
+                            le {{ proposal.created_at.strftime('%d/%m/%Y') }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-3">
+            <a href="{{ url_for('main.books') }}" class="btn btn-outline-primary">
+                <i class="fas fa-book"></i> Voir tous les livres
+            </a>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <p class="text-muted">Aucune proposition de livre pour le moment.</p>
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('main.propose_book') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Proposer le premier livre
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if current_user.is_authenticated %}
+<div class="row mt-4">
+    <div class="col-12 text-center">
+        <a href="{{ url_for('main.propose_book') }}" class="btn btn-success btn-lg">
+            <i class="fas fa-plus"></i> Proposer un livre
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}Modération des avis - Administration - BiblioRuche{% endblock %}
+
+{% block content %}
+<div class="admin-panel">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb" class="mb-3">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Accueil</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Administration</a></li>
+                    <li class="breadcrumb-item active">Modération des avis</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-comments"></i> Modération des avis</h4>
+                </div>
+                <div class="card-body">
+                    {% if reviews.items %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Livre</th>
+                                    <th>Utilisateur</th>
+                                    <th>Note</th>
+                                    <th>Avis</th>
+                                    <th>Date</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for review in reviews.items %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ url_for('main.book_detail', book_id=review.book.id) }}">
+                                            {{ review.book.title }}
+                                        </a>
+                                        <br><small class="text-muted">{{ review.book.author }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if review.user.avatar_url %}
+                                            <img src="{{ review.user.avatar_url }}" alt="{{ review.user.display_name }}" 
+                                                 class="rounded-circle me-2" width="30" height="30">
+                                            {% else %}
+                                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" 
+                                                 style="width: 30px; height: 30px; font-size: 0.8rem;">
+                                                {{ review.user.display_name[0].upper() }}
+                                            </div>
+                                            {% endif %}
+                                            <a href="{{ url_for('main.user_profile', user_id=review.user.id) }}" 
+                                               class="text-decoration-none">{{ review.user.display_name }}</a>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="stars">
+                                            {% for i in range(1, 6) %}
+                                                {% if i <= review.rating %}
+                                                    <i class="fas fa-star text-warning"></i>
+                                                {% else %}
+                                                    <i class="far fa-star text-muted"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if review.comment %}
+                                        <div style="max-width: 200px;">
+                                            {{ review.comment[:100] }}{% if review.comment|length > 100 %}...{% endif %}
+                                        </div>
+                                        {% else %}
+                                        <em class="text-muted">Pas d'avis écrit</em>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ review.created_at.strftime('%d/%m/%Y') }}
+                                        {% if review.updated_at != review.created_at %}
+                                        <br><small class="text-muted">Modifié le {{ review.updated_at.strftime('%d/%m/%Y') }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if review.is_visible %}
+                                            <span class="badge bg-success">Visible</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Masqué</span>
+                                        {% endif %}
+                                        {% if review.is_moderated %}
+                                            <br><span class="badge bg-info">Modéré</span>
+                                        {% endif %}
+                                    </td>                                    <td>
+                                        <a href="{{ url_for('admin.moderate_review', review_id=review.id) }}" 
+                                           class="btn btn-sm btn-warning">
+                                            <i class="fas fa-cog"></i> Modérer
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if reviews.pages > 1 %}
+                    <nav aria-label="Pagination des avis">
+                        <ul class="pagination justify-content-center">
+                            {% if reviews.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin.reviews', page=reviews.prev_num) }}">Précédent</a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for page_num in reviews.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != reviews.page %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('admin.reviews', page=page_num) }}">{{ page_num }}</a>
+                                    </li>
+                                    {% else %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                    {% endif %}
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">…</span>
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if reviews.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin.reviews', page=reviews.next_num) }}">Suivant</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                    
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Aucun avis à modérer</h5>
+                        <p class="text-muted">Les avis des utilisateurs apparaîtront ici une fois publiés.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}Administration - BiblioRuche{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2><i class="fas fa-tachometer-alt"></i> Tableau de bord administrateur</h2>
+        <p class="text-muted">Bienvenue dans l'interface d'administration de BiblioRuche</p>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ stats.total_users }}</h4>
+                        <p class="mb-0">Utilisateurs</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ stats.total_proposals }}</h4>
+                        <p class="mb-0">Propositions</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-book fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ stats.pending_proposals }}</h4>
+                        <p class="mb-0">En attente</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ stats.active_votes }}</h4>
+                        <p class="mb-0">Votes actifs</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-vote-yea fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-lightbulb"></i> Propositions récentes</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_proposals %}
+                <div class="list-group list-group-flush">
+                    {% for proposal in recent_proposals %}
+                    <div class="list-group-item d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="mb-1">{{ proposal.title }}</h6>
+                            <p class="mb-1 text-muted">{{ proposal.author }}</p>
+                            <small>Proposé par <a href="{{ url_for('main.user_profile', user_id=proposal.proposer.id) }}" 
+                                              class="text-decoration-none">{{ proposal.proposer.display_name }}</a></small>
+                        </div>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ url_for('admin.approve_proposal', proposal_id=proposal.id) }}" 
+                               class="btn btn-outline-success" title="Approuver">
+                                <i class="fas fa-check"></i>
+                            </a>
+                            <a href="{{ url_for('admin.reject_proposal', proposal_id=proposal.id) }}" 
+                               class="btn btn-outline-danger" title="Rejeter">
+                                <i class="fas fa-times"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('admin.proposals') }}" class="btn btn-primary">
+                        Voir toutes les propositions
+                    </a>
+                </div>
+                {% else %}
+                <p class="text-muted text-center">Aucune proposition en attente</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-vote-yea"></i> Votes actifs</h5>
+            </div>
+            <div class="card-body">
+                {% if active_votes %}
+                <div class="list-group list-group-flush">
+                    {% for vote in active_votes %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ vote.title }}</h6>
+                                <p class="mb-1 text-muted">{{ vote.books|length }} livre(s) en compétition</p>
+                                <small>Fin : {{ vote.end_date.strftime('%d/%m/%Y') }}</small>
+                            </div>                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('main.vote_detail', vote_id=vote.id) }}" 
+                                   class="btn btn-outline-primary" title="Voir">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ url_for('main.vote_detail', vote_id=vote.id) }}?show_results=1" 
+                                   class="btn btn-outline-info" title="Voir les résultats">
+                                    <i class="fas fa-chart-bar"></i>
+                                </a>
+                                <a href="{{ url_for('admin.edit_vote', vote_id=vote.id) }}" 
+                                   class="btn btn-outline-warning" title="Modifier">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{{ url_for('admin.close_vote', vote_id=vote.id) }}" 
+                                   class="btn btn-outline-danger" title="Clôturer">
+                                    <i class="fas fa-stop"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('admin.create_vote') }}" class="btn btn-warning">
+                        <i class="fas fa-plus"></i> Créer un vote
+                    </a>
+                </div>
+                {% else %}
+                <p class="text-muted text-center">Aucun vote actif</p>
+                <div class="text-center">
+                    <a href="{{ url_for('admin.create_vote') }}" class="btn btn-warning">
+                        <i class="fas fa-plus"></i> Créer un vote
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-book-reader"></i> Lectures en cours</h5>
+            </div>
+            <div class="card-body">
+                {% if current_readings %}
+                <div class="row">
+                    {% for reading in current_readings %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-success">
+                            <div class="card-body">
+                                <h6 class="card-title">{{ reading.book.title }}</h6>
+                                <p class="card-text">
+                                    <strong>Auteur :</strong> {{ reading.book.author }}<br>
+                                    <strong>Fin :</strong> {{ reading.end_date.strftime('%d/%m/%Y') }}
+                                    {% if reading.debrief_date %}
+                                    <br><strong>Débrief :</strong> {{ reading.debrief_date.strftime('%d/%m/%Y') }}
+                                    {% endif %}
+                                </p>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('admin.complete_reading', reading_id=reading.id) }}" 
+                                       class="btn btn-success">Terminer</a>
+                                    <a href="{{ url_for('admin.archive_reading', reading_id=reading.id) }}" 
+                                       class="btn btn-secondary">Archiver</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted text-center">Aucune lecture en cours</p>
+                {% endif %}
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('admin.create_reading') }}" class="btn btn-info">
+                        <i class="fas fa-plus"></i> Programmer une lecture
+                    </a>
+                </div>
+            </div>        </div>
+    </div>
+</div>
+
+<!-- Outils d'administration -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-tools"></i> Outils d'administration</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-center">
+                    <a href="{{ url_for('admin.cleanup_database') }}" 
+                       class="btn btn-outline-warning"
+                       onclick="return confirm('Nettoyer la base de données ? Cela supprimera les livres rejetés et les votes fermés.')">
+                        <i class="fas fa-broom"></i> Nettoyer la base de données
+                    </a>
+                </div>
+                <small class="text-muted d-block text-center mt-2">
+                    Supprime les livres rejetés et les sessions de vote fermées
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
