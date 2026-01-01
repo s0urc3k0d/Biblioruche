@@ -54,6 +54,32 @@
                         </button>
                     </li>
                     {% if current_user.is_authenticated %}
+                        <!-- Notifications Bell -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown" id="notificationBell" title="Notifications">
+                                <i class="fas fa-bell"></i>
+                                {% set notif_count = get_unread_notifications_count() %}
+                                {% if notif_count > 0 %}
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge" id="notificationCount">
+                                    {{ notif_count if notif_count < 100 else '99+' }}
+                                </span>
+                                {% endif %}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end notification-dropdown" style="width: 350px; max-height: 400px; overflow-y: auto;">
+                                <li class="dropdown-header d-flex justify-content-between align-items-center px-3">
+                                    <strong>Notifications</strong>
+                                    <button class="btn btn-sm btn-link text-decoration-none p-0" id="markAllRead" title="Tout marquer comme lu">
+                                        <i class="fas fa-check-double"></i>
+                                    </button>
+                                </li>
+                                <li><hr class="dropdown-divider my-1"></li>
+                                <div id="notificationList">
+                                    <li class="text-center py-3 text-muted">
+                                        <i class="fas fa-spinner fa-spin"></i> Chargement...
+                                    </li>
+                                </div>
+                            </ul>
+                        </li>
                         {% if current_user.is_admin %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle text-warning" href="#" role="button" data-bs-toggle="dropdown">
@@ -164,6 +190,123 @@
             }
         });
     </script>
+    
+    <!-- Notifications script -->
+    {% if current_user.is_authenticated %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const notificationBell = document.getElementById('notificationBell');
+            const notificationList = document.getElementById('notificationList');
+            const notificationCount = document.getElementById('notificationCount');
+            const markAllRead = document.getElementById('markAllRead');
+            let notificationsLoaded = false;
+            
+            // Charger les notifications au clic sur la cloche
+            if (notificationBell) {
+                notificationBell.addEventListener('click', function() {
+                    if (!notificationsLoaded) {
+                        loadNotifications();
+                        notificationsLoaded = true;
+                    }
+                });
+            }
+            
+            // Marquer toutes comme lues
+            if (markAllRead) {
+                markAllRead.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    fetch('/api/notifications/read-all', { method: 'POST' })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Mettre à jour l'UI
+                                document.querySelectorAll('.notification-item.unread').forEach(el => {
+                                    el.classList.remove('unread');
+                                });
+                                if (notificationCount) {
+                                    notificationCount.style.display = 'none';
+                                }
+                            }
+                        });
+                });
+            }
+            
+            function loadNotifications() {
+                fetch('/api/notifications?limit=10')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.notifications.length > 0) {
+                            notificationList.innerHTML = data.notifications.map(n => `
+                                <li>
+                                    <a class="dropdown-item notification-item ${n.is_read ? '' : 'unread'}" 
+                                       href="${n.link || '#'}"
+                                       data-id="${n.id}"
+                                       onclick="markNotificationRead(${n.id})">
+                                        <div class="d-flex align-items-start">
+                                            <i class="fas ${n.icon || 'fa-bell'} me-2 mt-1 ${n.is_read ? 'text-muted' : 'text-primary'}"></i>
+                                            <div class="flex-grow-1">
+                                                <div class="fw-semibold small">${n.title}</div>
+                                                <div class="text-muted small text-truncate" style="max-width: 250px;">${n.message}</div>
+                                                <div class="text-muted" style="font-size: 0.7rem;">${formatDate(n.created_at)}</div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </li>
+                            `).join('');
+                        } else {
+                            notificationList.innerHTML = `
+                                <li class="text-center py-3 text-muted">
+                                    <i class="fas fa-bell-slash"></i> Aucune notification
+                                </li>
+                            `;
+                        }
+                    })
+                    .catch(err => {
+                        notificationList.innerHTML = `
+                            <li class="text-center py-3 text-danger">
+                                <i class="fas fa-exclamation-triangle"></i> Erreur de chargement
+                            </li>
+                        `;
+                    });
+            }
+            
+            function formatDate(isoDate) {
+                const date = new Date(isoDate);
+                const now = new Date();
+                const diff = Math.floor((now - date) / 1000);
+                
+                if (diff < 60) return 'À l\'instant';
+                if (diff < 3600) return Math.floor(diff / 60) + ' min';
+                if (diff < 86400) return Math.floor(diff / 3600) + 'h';
+                if (diff < 604800) return Math.floor(diff / 86400) + 'j';
+                return date.toLocaleDateString('fr-FR');
+            }
+            
+            // Fonction globale pour marquer une notification comme lue
+            window.markNotificationRead = function(id) {
+                fetch(`/api/notifications/${id}/read`, { method: 'POST' });
+            };
+            
+            // Rafraîchir le compteur périodiquement (toutes les 2 minutes)
+            setInterval(function() {
+                fetch('/api/notifications/count')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && notificationCount) {
+                            if (data.unread_count > 0) {
+                                notificationCount.textContent = data.unread_count < 100 ? data.unread_count : '99+';
+                                notificationCount.style.display = 'inline';
+                            } else {
+                                notificationCount.style.display = 'none';
+                            }
+                        }
+                    });
+            }, 120000);
+        });
+    </script>
+    {% endif %}
+    
     {% block scripts %}{% endblock %}
 </body>
 </html>

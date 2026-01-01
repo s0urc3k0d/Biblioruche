@@ -10,6 +10,83 @@
     </div>
 </div>
 
+<!-- Barre de recherche avancée -->
+<div class="search-filters mb-4">
+    <form method="GET" action="{{ url_for('main.books') }}" id="searchForm">
+        <input type="hidden" name="status" value="{{ current_status }}">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Rechercher</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" name="q" placeholder="Titre, auteur..." 
+                           value="{{ request.args.get('q', '') }}">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Genre</label>
+                <select class="form-select" name="genre">
+                    <option value="">Tous les genres</option>
+                    {% for genre in genres %}
+                    <option value="{{ genre }}" {% if request.args.get('genre') == genre %}selected{% endif %}>{{ genre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Année</label>
+                <select class="form-select" name="year">
+                    <option value="">Toutes</option>
+                    {% for year in years %}
+                    <option value="{{ year }}" {% if request.args.get('year')|string == year|string %}selected{% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Tri</label>
+                <select class="form-select" name="sort">
+                    <option value="recent" {% if request.args.get('sort', 'recent') == 'recent' %}selected{% endif %}>Plus récents</option>
+                    <option value="title" {% if request.args.get('sort') == 'title' %}selected{% endif %}>Titre A-Z</option>
+                    <option value="author" {% if request.args.get('sort') == 'author' %}selected{% endif %}>Auteur A-Z</option>
+                    <option value="rating" {% if request.args.get('sort') == 'rating' %}selected{% endif %}>Mieux notés</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-filter"></i> Filtrer
+                </button>
+            </div>
+        </div>
+        
+        <!-- Filtres actifs -->
+        {% if request.args.get('q') or request.args.get('genre') or request.args.get('year') %}
+        <div class="mt-3">
+            <span class="text-muted small me-2">Filtres actifs:</span>
+            {% if request.args.get('q') %}
+            <span class="filter-badge">
+                "{{ request.args.get('q') }}"
+                <span class="remove-filter" onclick="removeFilter('q')"><i class="fas fa-times"></i></span>
+            </span>
+            {% endif %}
+            {% if request.args.get('genre') %}
+            <span class="filter-badge">
+                {{ request.args.get('genre') }}
+                <span class="remove-filter" onclick="removeFilter('genre')"><i class="fas fa-times"></i></span>
+            </span>
+            {% endif %}
+            {% if request.args.get('year') %}
+            <span class="filter-badge">
+                {{ request.args.get('year') }}
+                <span class="remove-filter" onclick="removeFilter('year')"><i class="fas fa-times"></i></span>
+            </span>
+            {% endif %}
+            <a href="{{ url_for('main.books', status=current_status) }}" class="btn btn-sm btn-outline-secondary ms-2">
+                <i class="fas fa-times"></i> Effacer tout
+            </a>
+        </div>
+        {% endif %}
+    </form>
+</div>
+
 <!-- Navigation par filtres -->
 <ul class="nav nav-tabs mb-4" id="bookTabs" role="tablist">
     <li class="nav-item" role="presentation">
@@ -178,4 +255,14 @@
     </div>
 </div>
 {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function removeFilter(filterName) {
+    const url = new URL(window.location.href);
+    url.searchParams.delete(filterName);
+    window.location.href = url.toString();
+}
+</script>
 {% endblock %}

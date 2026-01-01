@@ -382,13 +382,14 @@ class ViewingParticipation(db.Model):
 - [x] API REST (/api/books, /api/stats, /api/notifications)
 - [x] Classement des contributeurs
 
-### Phase 6 - Prochaines améliorations (à venir)
-- [ ] CI/CD Pipeline (GitHub Actions)
-- [ ] Webhooks Discord
-- [ ] Interface notifications (cloche UI)
-- [ ] Recherche avancée avec filtres
-- [ ] Headers de sécurité (CSP)
-- [ ] Backup automatique BDD
+### Phase 6 - Améliorations UX/Sécurité (Janvier 2026) ✅
+- [x] Headers de sécurité HTTP (CSP, X-Frame-Options, X-Content-Type-Options, etc.)
+- [x] Interface notifications (cloche UI dans navbar avec dropdown)
+- [x] Recherche avancée avec filtres (genre, année, tri)
+- [x] Auto-complétion formulaires (Open Library API)
+- [ ] CI/CD Pipeline (GitHub Actions) - Reporté
+- [ ] Webhooks Discord - Reporté
+- [ ] Backup automatique BDD - Reporté
 
 ---
 

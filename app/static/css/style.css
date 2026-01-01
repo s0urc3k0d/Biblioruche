@@ -788,3 +788,161 @@ a.text-decoration-none:hover {
 [data-theme="dark"] .card .card-body p.small {
     color: #cccccc !important;
 }
+
+/* ===================================
+   NOTIFICATIONS STYLES
+   =================================== */
+
+.notification-badge {
+    font-size: 0.65rem;
+    padding: 0.25em 0.5em;
+    min-width: 18px;
+}
+
+.notification-dropdown {
+    padding: 0;
+    border: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.notification-dropdown .dropdown-header {
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border-color);
+    padding: 0.75rem 1rem;
+}
+
+.notification-item {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.2s;
+}
+
+.notification-item:last-child {
+    border-bottom: none;
+}
+
+.notification-item.unread {
+    background-color: rgba(108, 92, 231, 0.08);
+    border-left: 3px solid var(--primary-color);
+}
+
+.notification-item:hover {
+    background-color: rgba(108, 92, 231, 0.12);
+}
+
+[data-theme="dark"] .notification-dropdown {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .notification-item.unread {
+    background-color: rgba(108, 92, 231, 0.15);
+}
+
+[data-theme="dark"] .notification-item:hover {
+    background-color: rgba(108, 92, 231, 0.2);
+}
+
+/* ===================================
+   SEARCH & AUTOCOMPLETE STYLES
+   =================================== */
+
+.autocomplete-container {
+    position: relative;
+}
+
+.autocomplete-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1050;
+    max-height: 300px;
+    overflow-y: auto;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 0.375rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    display: none;
+}
+
+.autocomplete-results.show {
+    display: block;
+}
+
+.autocomplete-item {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.2s;
+}
+
+.autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+.autocomplete-item:hover,
+.autocomplete-item.active {
+    background-color: rgba(108, 92, 231, 0.1);
+}
+
+.autocomplete-item .book-title {
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.autocomplete-item .book-author {
+    font-size: 0.85rem;
+    color: var(--text-muted, #6c757d);
+}
+
+.autocomplete-item .book-year {
+    font-size: 0.75rem;
+    color: var(--text-muted, #6c757d);
+}
+
+.autocomplete-cover {
+    width: 40px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-right: 0.75rem;
+}
+
+/* Advanced search filters */
+.search-filters {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.search-filters .form-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.filter-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 1rem;
+    font-size: 0.8rem;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.filter-badge .remove-filter {
+    margin-left: 0.5rem;
+    cursor: pointer;
+    opacity: 0.8;
+}
+
+.filter-badge .remove-filter:hover {
+    opacity: 1;
+}
+

@@ -12,8 +12,13 @@
                 <div class="row">
                     <div class="col-md-8 mb-3">
                         <label for="search-input" class="form-label">Recherche de livre</label>
-                        <input type="text" id="search-input" class="form-control" placeholder="Entrez l'ISBN (ex: 9782070360024) ou le titre du livre">
-                        <small class="text-muted">Saisissez l'ISBN à 10 ou 13 chiffres ou le titre du livre pour rechercher automatiquement les informations</small>
+                        <div class="autocomplete-container">
+                            <input type="text" id="search-input" class="form-control" 
+                                   placeholder="Entrez l'ISBN (ex: 9782070360024) ou le titre du livre"
+                                   autocomplete="off">
+                            <div id="autocomplete-results" class="autocomplete-results"></div>
+                        </div>
+                        <small class="text-muted">Saisissez l'ISBN à 10 ou 13 chiffres ou commencez à taper le titre pour voir des suggestions</small>
                     </div>                    <div class="col-md-4 mb-3">
                         <label class="form-label">&nbsp;</label>
                         <button type="button" id="search-btn" class="btn btn-primary w-100">
@@ -172,7 +177,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchBtn = document.getElementById('search-btn');
     const searchResult = document.getElementById('search-result');
     const searchError = document.getElementById('search-error');
-    const searchLoading = document.getElementById('search-loading');    // Fonction pour nettoyer l'ISBN
+    const searchLoading = document.getElementById('search-loading');
+    const autocompleteResults = document.getElementById('autocomplete-results');
+    
+    let autocompleteTimeout = null;
+    let currentFocus = -1;
+
+    // Fonction pour nettoyer l'ISBN
     function cleanISBN(isbn) {
         return isbn.replace(/[^0-9X]/g, '');
     }
@@ -182,9 +193,115 @@ document.addEventListener('DOMContentLoaded', function() {
         const cleaned = cleanISBN(query);
         return cleaned.length >= 10 && /^[0-9X]+$/.test(cleaned);
     }
+    
+    // Auto-complétion avec notre API Open Library
+    async function fetchAutocomplete(query) {
+        try {
+            const response = await fetch(`/api/books/autocomplete?q=${encodeURIComponent(query)}&limit=5`);
+            const data = await response.json();
+            return data.success ? data.suggestions : [];
+        } catch (error) {
+            console.error('Autocomplete error:', error);
+            return [];
+        }
+    }
+    
+    // Afficher les résultats d'auto-complétion
+    function showAutocomplete(suggestions) {
+        if (suggestions.length === 0) {
+            autocompleteResults.classList.remove('show');
+            return;
+        }
+        
+        autocompleteResults.innerHTML = suggestions.map((s, i) => `
+            <div class="autocomplete-item" data-index="${i}" 
+                 data-title="${s.title}" data-author="${s.author}" data-year="${s.year || ''}">
+                ${s.cover_url ? `<img src="${s.cover_url}" class="autocomplete-cover" alt="">` : ''}
+                <div>
+                    <div class="book-title">${s.title}</div>
+                    <div class="book-author">${s.author}</div>
+                    ${s.year ? `<div class="book-year">${s.year}</div>` : ''}
+                </div>
+            </div>
+        `).join('');
+        
+        autocompleteResults.classList.add('show');
+        
+        // Ajouter les événements de clic
+        autocompleteResults.querySelectorAll('.autocomplete-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const title = this.dataset.title;
+                const author = this.dataset.author;
+                const year = this.dataset.year;
+                
+                document.getElementById('title').value = title;
+                document.getElementById('author').value = author;
+                if (year) document.getElementById('publication_year').value = year;
+                
+                searchInput.value = title;
+                autocompleteResults.classList.remove('show');
+                
+                // Optionnel: lancer une recherche complète pour avoir plus d'infos
+                searchBtn.click();
+            });
+        });
+    }
+    
+    // Événement de saisie pour l'auto-complétion
+    searchInput.addEventListener('input', function() {
+        const query = this.value.trim();
+        
+        clearTimeout(autocompleteTimeout);
+        
+        if (query.length < 3 || isISBN(query)) {
+            autocompleteResults.classList.remove('show');
+            return;
+        }
+        
+        // Débounce de 300ms
+        autocompleteTimeout = setTimeout(async () => {
+            const suggestions = await fetchAutocomplete(query);
+            showAutocomplete(suggestions);
+        }, 300);
+    });
+    
+    // Navigation clavier dans l'auto-complétion
+    searchInput.addEventListener('keydown', function(e) {
+        const items = autocompleteResults.querySelectorAll('.autocomplete-item');
+        
+        if (e.key === 'ArrowDown') {
+            currentFocus++;
+            setActive(items);
+            e.preventDefault();
+        } else if (e.key === 'ArrowUp') {
+            currentFocus--;
+            setActive(items);
+            e.preventDefault();
+        } else if (e.key === 'Enter' && currentFocus > -1) {
+            e.preventDefault();
+            if (items[currentFocus]) items[currentFocus].click();
+        } else if (e.key === 'Escape') {
+            autocompleteResults.classList.remove('show');
+        }
+    });
+    
+    function setActive(items) {
+        items.forEach(item => item.classList.remove('active'));
+        if (currentFocus >= items.length) currentFocus = 0;
+        if (currentFocus < 0) currentFocus = items.length - 1;
+        if (items[currentFocus]) items[currentFocus].classList.add('active');
+    }
+    
+    // Fermer l'auto-complétion si clic ailleurs
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !autocompleteResults.contains(e.target)) {
+            autocompleteResults.classList.remove('show');
+        }
+    });
 
-    // Fonction pour rechercher un livre par ISBN ou titre
+    // Fonction pour rechercher un livre par ISBN ou titre (Google Books + fallback Open Library)
     async function searchBook(query) {
+        // Essayer d'abord Google Books
         try {
             let apiUrl;
             
@@ -198,71 +315,70 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const response = await fetch(apiUrl);
             
-            if (!response.ok) {
-                throw new Error('Erreur de connexion à l\'API Google Books');
+            if (response.ok) {
+                const data = await response.json();
+                if (data.items && data.totalItems > 0) {
+                    return { source: 'google', data: data.items[0].volumeInfo };
+                }
             }
-            
-            const data = await response.json();
-
-            if (!data.items || data.totalItems === 0) {
-                throw new Error('Aucun livre trouvé pour cette recherche');
-            }
-
-            return data.items[0].volumeInfo;
         } catch (error) {
-            console.error('Erreur lors de la recherche:', error);
-            throw error;
+            console.error('Google Books error:', error);
         }
+        
+        // Fallback: Open Library via notre API
+        try {
+            if (isISBN(query)) {
+                const response = await fetch(`/api/books/isbn/${cleanISBN(query)}`);
+                const data = await response.json();
+                if (data.success) {
+                    return { source: 'openlibrary', data: data.book };
+                }
+            } else {
+                const response = await fetch(`/api/books/search?q=${encodeURIComponent(query)}&limit=1`);
+                const data = await response.json();
+                if (data.success && data.books.length > 0) {
+                    return { source: 'openlibrary', data: data.books[0] };
+                }
+            }
+        } catch (error) {
+            console.error('Open Library error:', error);
+        }
+        
+        throw new Error('Aucun livre trouvé');
     }
 
     // Fonction pour remplir le formulaire
-    function fillForm(bookInfo) {
-        // Titre
-        if (bookInfo.title) {
-            document.getElementById('title').value = bookInfo.title;
-        }
-
-        // Auteur(s)
-        if (bookInfo.authors && bookInfo.authors.length > 0) {
-            document.getElementById('author').value = bookInfo.authors.join(', ');
-        }
-
-        // Description
-        if (bookInfo.description) {
-            document.getElementById('description').value = bookInfo.description;
-        }
-
-        // Éditeur
-        if (bookInfo.publisher) {
-            document.getElementById('publisher').value = bookInfo.publisher;
-        }
-
-        // Année de publication
-        if (bookInfo.publishedDate) {
-            const year = bookInfo.publishedDate.split('-')[0];
-            document.getElementById('publication_year').value = year;
-        }
-
-        // Nombre de pages
-        if (bookInfo.pageCount) {
-            document.getElementById('pages_count').value = bookInfo.pageCount;
-        }
-
-        // Catégories/Genre
-        if (bookInfo.categories && bookInfo.categories.length > 0) {
-            document.getElementById('genre').value = bookInfo.categories[0];
-        }
-
-        // ISBN
-        if (bookInfo.industryIdentifiers) {
-            const isbn13 = bookInfo.industryIdentifiers.find(id => id.type === 'ISBN_13');
-            const isbn10 = bookInfo.industryIdentifiers.find(id => id.type === 'ISBN_10');
-            const isbn = isbn13 ? isbn13.identifier : (isbn10 ? isbn10.identifier : '');
-            if (isbn) {
-                document.getElementById('isbn').value = isbn;
+    function fillForm(result) {
+        const bookInfo = result.data;
+        const source = result.source;
+        
+        if (source === 'google') {
+            // Format Google Books
+            if (bookInfo.title) document.getElementById('title').value = bookInfo.title;
+            if (bookInfo.authors?.length > 0) document.getElementById('author').value = bookInfo.authors.join(', ');
+            if (bookInfo.description) document.getElementById('description').value = bookInfo.description;
+            if (bookInfo.publisher) document.getElementById('publisher').value = bookInfo.publisher;
+            if (bookInfo.publishedDate) document.getElementById('publication_year').value = bookInfo.publishedDate.split('-')[0];
+            if (bookInfo.pageCount) document.getElementById('pages_count').value = bookInfo.pageCount;
+            if (bookInfo.categories?.length > 0) document.getElementById('genre').value = bookInfo.categories[0];
+            if (bookInfo.industryIdentifiers) {
+                const isbn13 = bookInfo.industryIdentifiers.find(id => id.type === 'ISBN_13');
+                const isbn10 = bookInfo.industryIdentifiers.find(id => id.type === 'ISBN_10');
+                if (isbn13 || isbn10) document.getElementById('isbn').value = (isbn13 || isbn10).identifier;
             }
+        } else {
+            // Format Open Library
+            if (bookInfo.title) document.getElementById('title').value = bookInfo.title;
+            if (bookInfo.author) document.getElementById('author').value = bookInfo.author;
+            if (bookInfo.year) document.getElementById('publication_year').value = bookInfo.year;
+            if (bookInfo.pages) document.getElementById('pages_count').value = bookInfo.pages;
+            if (bookInfo.isbn) document.getElementById('isbn').value = bookInfo.isbn;
+            if (bookInfo.subjects?.length > 0) document.getElementById('genre').value = bookInfo.subjects[0];
+            if (bookInfo.publishers?.length > 0) document.getElementById('publisher').value = bookInfo.publishers[0];
         }
-    }    // Gestionnaire de clic sur le bouton de recherche
+    }
+
+    // Gestionnaire de clic sur le bouton de recherche
     searchBtn.addEventListener('click', async function() {
         const query = searchInput.value.trim();
         
@@ -275,10 +391,11 @@ document.addEventListener('DOMContentLoaded', function() {
         searchResult.style.display = 'none';
         searchError.style.display = 'none';
         searchLoading.style.display = 'block';
+        autocompleteResults.classList.remove('show');
 
         try {
-            const bookInfo = await searchBook(query);
-            fillForm(bookInfo);
+            const result = await searchBook(query);
+            fillForm(result);
             searchLoading.style.display = 'none';
             searchResult.style.display = 'block';
         } catch (error) {
@@ -287,9 +404,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Permettre la recherche en appuyant sur Entrée
+    // Permettre la recherche en appuyant sur Entrée (sauf si dans autocomplete)
     searchInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
+        if (e.key === 'Enter' && currentFocus === -1) {
             e.preventDefault();
             searchBtn.click();
         }

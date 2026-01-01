@@ -56,6 +56,45 @@ def setup_logging(app):
     })
 
 
+def setup_security_headers(app):
+    """Configure les headers de sécurité HTTP"""
+    @app.after_request
+    def add_security_headers(response):
+        # Protection contre le clickjacking
+        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+        
+        # Protection contre le sniffing MIME
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        
+        # Protection XSS (navigateurs modernes)
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        
+        # Referrer Policy
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        
+        # Permissions Policy (remplace Feature-Policy)
+        response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
+        
+        # Content Security Policy (CSP) - adaptée pour BiblioRuche
+        # Autorise Bootstrap, FontAwesome, Chart.js, Open Library covers
+        csp = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
+            "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
+            "img-src 'self' data: https: blob:; "
+            "connect-src 'self' https://openlibrary.org https://covers.openlibrary.org; "
+            "frame-ancestors 'self';"
+        )
+        response.headers['Content-Security-Policy'] = csp
+        
+        # HSTS - Uniquement en production avec HTTPS
+        if not app.debug and os.getenv('FLASK_ENV') == 'production':
+            response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+        
+        return response
+
+
 def create_app():
     app = Flask(__name__)
       # Configuration
@@ -90,6 +129,9 @@ def create_app():
     
     # Configuration du logging
     setup_logging(app)
+    
+    # Configuration des headers de sécurité
+    setup_security_headers(app)
     
     # Enregistrer les blueprints
     from app.routes.main import main_bp
@@ -134,5 +176,16 @@ def create_app():
             from app.models import CineClubSettings
             return CineClubSettings.get_settings()
         return dict(get_cineclub_settings=get_cineclub_settings)
+    
+    @app.context_processor
+    def inject_notifications():
+        """Injecte le compteur de notifications dans tous les templates"""
+        def get_unread_notifications_count():
+            from flask_login import current_user
+            if current_user.is_authenticated:
+                from app.models import Notification
+                return Notification.get_unread_count(current_user.id)
+            return 0
+        return dict(get_unread_notifications_count=get_unread_notifications_count)
     
     return app

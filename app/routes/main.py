@@ -68,6 +68,12 @@ def books():
     per_page = 12  # Nombre de livres par page
     status_filter = request.args.get('status', 'all')
     
+    # Paramètres de recherche avancée
+    search_query = request.args.get('q', '').strip()
+    genre_filter = request.args.get('genre', '').strip()
+    year_filter = request.args.get('year', '', type=str).strip()
+    sort_by = request.args.get('sort', 'recent')
+    
     # Construire la requête de base
     query = BookProposal.query
     
@@ -82,10 +88,41 @@ def books():
     elif status_filter == 'archived':
         query = query.filter_by(status='archived')
     
+    # Appliquer la recherche textuelle
+    if search_query:
+        search_pattern = f'%{search_query}%'
+        query = query.filter(
+            db.or_(
+                BookProposal.title.ilike(search_pattern),
+                BookProposal.author.ilike(search_pattern),
+                BookProposal.description.ilike(search_pattern)
+            )
+        )
+    
+    # Filtrer par genre
+    if genre_filter:
+        query = query.filter(BookProposal.genre == genre_filter)
+    
+    # Filtrer par année
+    if year_filter:
+        try:
+            query = query.filter(BookProposal.publication_year == int(year_filter))
+        except ValueError:
+            pass
+    
+    # Tri
+    if sort_by == 'title':
+        query = query.order_by(BookProposal.title.asc())
+    elif sort_by == 'author':
+        query = query.order_by(BookProposal.author.asc())
+    elif sort_by == 'rating':
+        # On ne peut pas trier par rating calculé directement, on garde recent
+        query = query.order_by(BookProposal.created_at.desc())
+    else:  # recent (default)
+        query = query.order_by(BookProposal.created_at.desc())
+    
     # Pagination
-    pagination = query.order_by(BookProposal.created_at.desc()).paginate(
-        page=page, per_page=per_page, error_out=False
-    )
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     
     # Compter les livres par statut pour les badges
     counts = {
@@ -97,11 +134,25 @@ def books():
         'archived': BookProposal.query.filter_by(status='archived').count(),
     }
     
+    # Récupérer les genres et années disponibles pour les filtres
+    genres = db.session.query(BookProposal.genre).filter(
+        BookProposal.genre != None,
+        BookProposal.genre != ''
+    ).distinct().order_by(BookProposal.genre).all()
+    genres = [g[0] for g in genres]
+    
+    years = db.session.query(BookProposal.publication_year).filter(
+        BookProposal.publication_year != None
+    ).distinct().order_by(BookProposal.publication_year.desc()).all()
+    years = [y[0] for y in years]
+    
     return render_template('books.html', 
                          pagination=pagination,
                          books=pagination.items,
                          current_status=status_filter,
-                         counts=counts)
+                         counts=counts,
+                         genres=genres,
+                         years=years)
 
 @main_bp.route('/vote/<int:vote_id>')
 def vote_detail(vote_id):
