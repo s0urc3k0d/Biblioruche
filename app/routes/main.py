@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from app import db, limiter
 from app.models import BookProposal, VotingSession, VoteOption, Vote, ReadingSession, User, BookReview, ReadingParticipation, Badge, UserBadge
@@ -14,6 +14,18 @@ def sanitize_input(text):
     if text is None:
         return None
     return bleach.clean(text, strip=True)
+
+
+@main_bp.route('/health')
+def health_check():
+    """Endpoint de health check pour Docker/monitoring"""
+    try:
+        # Vérifier la connexion à la DB
+        db.session.execute(db.text('SELECT 1'))
+        return jsonify({'status': 'healthy', 'database': 'connected'}), 200
+    except Exception as e:
+        return jsonify({'status': 'unhealthy', 'error': str(e)}), 500
+
 
 @main_bp.route('/')
 def index():
