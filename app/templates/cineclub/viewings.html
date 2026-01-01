@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Séances de visionnage - BiblioCinéClub{% endblock %}
+
+{% block content %}
+<h1 class="mb-4"><i class="fas fa-calendar-alt text-success"></i> Séances de visionnage</h1>
+
+<!-- Séances à venir / en direct -->
+<div class="mb-5">
+    <h3><i class="fas fa-play-circle text-primary"></i> À venir</h3>
+    {% if upcoming %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for viewing in upcoming %}
+        <div class="col">
+            <div class="card h-100 {% if viewing.status == 'live' %}border-danger border-3{% endif %}">
+                {% if viewing.status == 'live' %}
+                <div class="card-header bg-danger text-white">
+                    <i class="fas fa-broadcast-tower"></i> EN DIRECT
+                </div>
+                {% endif %}
+                
+                {% if viewing.film.poster_url %}
+                <img src="{{ viewing.film.poster_url }}" class="card-img-top" alt="{{ viewing.film.title }}" style="height: 200px; object-fit: cover;">
+                {% else %}
+                <div class="card-img-top bg-dark d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <i class="fas fa-film fa-4x text-muted"></i>
+                </div>
+                {% endif %}
+                
+                <div class="card-body">
+                    <h5 class="card-title">{{ viewing.film.title }}</h5>
+                    <p class="card-text text-muted">
+                        <i class="fas fa-user"></i> {{ viewing.film.director }}
+                    </p>
+                    <p class="card-text">
+                        <i class="fas fa-calendar text-primary"></i> 
+                        {{ viewing.scheduled_date.strftime('%d/%m/%Y à %H:%M') }}
+                    </p>
+                    <p class="card-text">
+                        <i class="fas fa-users text-info"></i> {{ viewing.get_participants_count() }} inscrits
+                    </p>
+                </div>
+                
+                <div class="card-footer">
+                    <a href="{{ url_for('cineclub.viewing_detail', viewing_id=viewing.id) }}" class="btn btn-{% if viewing.status == 'live' %}danger{% else %}primary{% endif %} w-100">
+                        {% if viewing.status == 'live' %}
+                        <i class="fas fa-play"></i> Rejoindre
+                        {% else %}
+                        <i class="fas fa-info-circle"></i> Détails / S'inscrire
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> Aucune séance programmée pour le moment.
+    </div>
+    {% endif %}
+</div>
+
+<!-- Séances passées -->
+<div>
+    <h3><i class="fas fa-history text-secondary"></i> Séances passées</h3>
+    {% if past %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Film</th>
+                    <th>Réalisateur</th>
+                    <th>Date</th>
+                    <th>Participants</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for viewing in past %}
+                <tr>
+                    <td>
+                        <i class="fas fa-check-circle text-success"></i>
+                        {{ viewing.film.title }}
+                    </td>
+                    <td>{{ viewing.film.director }}</td>
+                    <td>{{ viewing.scheduled_date.strftime('%d/%m/%Y') }}</td>
+                    <td>{{ viewing.get_participants_count() }}</td>
+                    <td>
+                        <a href="{{ url_for('cineclub.viewing_detail', viewing_id=viewing.id) }}" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-info-circle"></i> Détails
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-secondary">
+        <i class="fas fa-info-circle"></i> Aucune séance passée.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

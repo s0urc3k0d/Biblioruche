@@ -28,6 +28,19 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('main.readings') }}">Lectures</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('ebooks.list_ebooks') }}">
+                            <i class="fas fa-tablet-alt"></i> Ebooks
+                        </a>
+                    </li>
+                    {% set cineclub_settings = get_cineclub_settings() %}
+                    {% if cineclub_settings and cineclub_settings.is_enabled %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('cineclub.index') }}">
+                            <i class="fas fa-film"></i> CinéClub
+                        </a>
+                    </li>
+                    {% endif %}
                     {% if current_user.is_authenticated %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('main.propose_book') }}">Proposer un livre</a>

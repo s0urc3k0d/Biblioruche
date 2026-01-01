@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Planifier une séance - CinéClub Admin{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('cineclub.admin_dashboard') }}">Admin CinéClub</a></li>
+        <li class="breadcrumb-item active">Planifier une séance</li>
+    </ol>
+</nav>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0"><i class="fas fa-calendar-plus"></i> Planifier une séance de visionnage</h4>
+            </div>
+            <div class="card-body">
+                {% if not selected_films %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Aucun film sélectionné disponible. Les films doivent d'abord être sélectionnés via un vote.
+                </div>
+                {% else %}
+                <form method="post">
+                    <div class="mb-3">
+                        <label for="film_id" class="form-label">Film à visionner <span class="text-danger">*</span></label>
+                        <select name="film_id" id="film_id" class="form-select" required>
+                            <option value="">-- Sélectionnez un film --</option>
+                            {% for film in selected_films %}
+                            <option value="{{ film.id }}">
+                                {{ film.title }} - {{ film.director }}
+                                {% if film.year %}({{ film.year }}){% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="scheduled_date" class="form-label">Date et heure <span class="text-danger">*</span></label>
+                        <input type="datetime-local" name="scheduled_date" id="scheduled_date" class="form-control" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="stream_url" class="form-label">Lien du stream</label>
+                        <input type="url" name="stream_url" id="stream_url" class="form-control" placeholder="https://www.twitch.tv/...">
+                        <div class="form-text">Lien Twitch, Discord ou autre plateforme de streaming</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea name="description" id="description" class="form-control" rows="3" maxlength="1000" placeholder="Informations supplémentaires pour les participants..."></textarea>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-calendar-check"></i> Planifier la séance
+                        </button>
+                        <a href="{{ url_for('cineclub.admin_dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Annuler
+                        </a>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

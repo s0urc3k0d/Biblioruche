@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Films - BiblioCinéClub{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-film text-info"></i> Filmothèque</h1>
+    {% if current_user.is_authenticated %}
+    <a href="{{ url_for('cineclub.propose_film') }}" class="btn btn-danger">
+        <i class="fas fa-plus"></i> Proposer un film
+    </a>
+    {% endif %}
+</div>
+
+<!-- Filtres -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" placeholder="Rechercher..." value="{{ search }}">
+            </div>
+            <div class="col-md-3">
+                <select name="genre" class="form-select">
+                    <option value="">Tous les genres</option>
+                    {% for g in genres %}
+                    <option value="{{ g }}" {% if g == current_genre %}selected{% endif %}>{{ g }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">Tous les statuts</option>
+                    <option value="approved" {% if current_status == 'approved' %}selected{% endif %}>Approuvés</option>
+                    <option value="selected" {% if current_status == 'selected' %}selected{% endif %}>Sélectionnés</option>
+                    <option value="viewed" {% if current_status == 'viewed' %}selected{% endif %}>Visionnés</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search"></i> Filtrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if films.items %}
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
+    {% for film in films.items %}
+    <div class="col">
+        <div class="card h-100 shadow-sm hover-lift">
+            <!-- Poster -->
+            <div class="position-relative">
+                {% if film.poster_url %}
+                <img src="{{ film.poster_url }}" class="card-img-top" alt="{{ film.title }}" style="height: 300px; object-fit: cover;">
+                {% else %}
+                <div class="card-img-top bg-dark d-flex align-items-center justify-content-center" style="height: 300px;">
+                    <i class="fas fa-film fa-5x text-muted"></i>
+                </div>
+                {% endif %}
+                
+                <!-- Badges de statut -->
+                <div class="position-absolute top-0 start-0 m-2">
+                    {% if film.status == 'selected' %}
+                    <span class="badge bg-warning"><i class="fas fa-star"></i> Sélectionné</span>
+                    {% elif film.status == 'viewed' %}
+                    <span class="badge bg-success"><i class="fas fa-check"></i> Visionné</span>
+                    {% elif film.status == 'pending' %}
+                    <span class="badge bg-secondary"><i class="fas fa-clock"></i> En attente</span>
+                    {% endif %}
+                </div>
+                
+                {% if film.genre %}
+                <span class="position-absolute top-0 end-0 badge bg-info m-2">{{ film.genre }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="card-body">
+                <h5 class="card-title">{{ film.title }}</h5>
+                {% if film.original_title and film.original_title != film.title %}
+                <p class="card-text small text-muted fst-italic">{{ film.original_title }}</p>
+                {% endif %}
+                <p class="card-text">
+                    <i class="fas fa-user text-muted"></i> {{ film.director }}
+                </p>
+                {% if film.year or film.duration %}
+                <p class="card-text small text-muted">
+                    {% if film.year %}<i class="fas fa-calendar"></i> {{ film.year }}{% endif %}
+                    {% if film.year and film.duration %} • {% endif %}
+                    {% if film.duration %}<i class="fas fa-clock"></i> {{ film.get_duration_display() }}{% endif %}
+                </p>
+                {% endif %}
+            </div>
+            
+            <div class="card-footer bg-transparent">
+                <a href="{{ url_for('cineclub.film_detail', film_id=film.id) }}" class="btn btn-outline-info btn-sm w-100">
+                    <i class="fas fa-info-circle"></i> Voir les détails
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if films.pages > 1 %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if films.has_prev %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('cineclub.list_films', page=films.prev_num, search=search, genre=current_genre, status=current_status) }}">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+        </li>
+        {% endif %}
+        
+        {% for page_num in films.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if page_num %}
+                <li class="page-item {% if page_num == films.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('cineclub.list_films', page=page_num, search=search, genre=current_genre, status=current_status) }}">{{ page_num }}</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+        {% endfor %}
+        
+        {% if films.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('cineclub.list_films', page=films.next_num, search=search, genre=current_genre, status=current_status) }}">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-film fa-4x text-muted mb-3"></i>
+    <h3>Aucun film trouvé</h3>
+    <p class="text-muted">Aucun film ne correspond à vos critères de recherche.</p>
+    <a href="{{ url_for('cineclub.list_films') }}" class="btn btn-outline-primary">
+        Réinitialiser les filtres
+    </a>
+</div>
+{% endif %}
+
+<style>
+.hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+}
+</style>
+{% endblock %}

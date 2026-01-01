@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}{{ ebook.title }} - BiblioRuche{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('ebooks.list_ebooks') }}">Ebooks</a></li>
+        <li class="breadcrumb-item active">{{ ebook.title }}</li>
+    </ol>
+</nav>
+
+<div class="row">
+    <!-- Couverture -->
+    <div class="col-md-4 mb-4">
+        <div class="card shadow">
+            {% if ebook.cover_filename %}
+            <img src="{{ url_for('ebooks.get_cover', ebook_id=ebook.id) }}" class="card-img-top" alt="{{ ebook.title }}">
+            {% else %}
+            <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 400px;">
+                <i class="fas fa-book fa-5x text-muted"></i>
+            </div>
+            {% endif %}
+            
+            <div class="card-body">
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('ebooks.download_ebook', ebook_id=ebook.id) }}" class="btn btn-success btn-lg w-100">
+                    <i class="fas fa-download"></i> Télécharger EPUB
+                </a>
+                {% else %}
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary btn-lg w-100">
+                    <i class="fab fa-twitch"></i> Connectez-vous pour télécharger
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Stats -->
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-3 text-muted">Statistiques</h6>
+                <div class="d-flex justify-content-between mb-2">
+                    <span><i class="fas fa-download text-primary"></i> Téléchargements</span>
+                    <strong>{{ ebook.download_count }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span><i class="fas fa-file text-info"></i> Taille</span>
+                    <strong>{{ ebook.get_file_size_display() }}</strong>
+                </div>
+                {% if ebook.pages_count %}
+                <div class="d-flex justify-content-between">
+                    <span><i class="fas fa-book-open text-success"></i> Pages</span>
+                    <strong>{{ ebook.pages_count }}</strong>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Informations -->
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-body">
+                <h1 class="card-title mb-3">{{ ebook.title }}</h1>
+                
+                <div class="mb-4">
+                    <h5 class="text-muted">
+                        <i class="fas fa-user"></i> {{ ebook.author }}
+                    </h5>
+                </div>
+                
+                {% if ebook.genre or ebook.publication_year %}
+                <div class="mb-4">
+                    {% if ebook.genre %}
+                    <span class="badge bg-primary me-2">
+                        <i class="fas fa-tag"></i> {{ ebook.genre }}
+                    </span>
+                    {% endif %}
+                    {% if ebook.publication_year %}
+                    <span class="badge bg-secondary">
+                        <i class="fas fa-calendar"></i> {{ ebook.publication_year }}
+                    </span>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                {% if ebook.description %}
+                <div class="mb-4">
+                    <h5>Description</h5>
+                    <p class="text-muted">{{ ebook.description }}</p>
+                </div>
+                {% endif %}
+                
+                <!-- Métadonnées -->
+                <div class="row">
+                    {% if ebook.isbn %}
+                    <div class="col-md-6 mb-3">
+                        <strong><i class="fas fa-barcode"></i> ISBN</strong>
+                        <p class="mb-0 text-muted">{{ ebook.isbn }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="col-md-6 mb-3">
+                        <strong><i class="fas fa-clock"></i> Ajouté le</strong>
+                        <p class="mb-0 text-muted">{{ ebook.created_at.strftime('%d/%m/%Y') }}</p>
+                    </div>
+                    
+                    {% if ebook.book_proposal %}
+                    <div class="col-12 mt-3">
+                        <div class="alert alert-info">
+                            <i class="fas fa-link"></i> 
+                            Cet ebook est lié au livre 
+                            <a href="{{ url_for('main.book_detail', book_id=ebook.book_proposal.id) }}">
+                                <strong>{{ ebook.book_proposal.title }}</strong>
+                            </a>
+                            de notre bibliothèque.
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        {% if current_user.is_authenticated and current_user.is_admin %}
+        <div class="card mt-3 border-warning">
+            <div class="card-header bg-warning text-dark">
+                <i class="fas fa-cog"></i> Administration
+            </div>
+            <div class="card-body">
+                <a href="{{ url_for('ebooks.edit_ebook', ebook_id=ebook.id) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-edit"></i> Modifier
+                </a>
+                <form action="{{ url_for('ebooks.toggle_ebook_visibility', ebook_id=ebook.id) }}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-outline-{% if ebook.is_visible %}secondary{% else %}success{% endif %}">
+                        <i class="fas fa-eye{% if ebook.is_visible %}-slash{% endif %}"></i>
+                        {% if ebook.is_visible %}Masquer{% else %}Rendre visible{% endif %}
+                    </button>
+                </form>
+                <form action="{{ url_for('ebooks.delete_ebook', ebook_id=ebook.id) }}" method="post" class="d-inline" onsubmit="return confirm('Supprimer cet ebook ?');">
+                    <button type="submit" class="btn btn-outline-danger">
+                        <i class="fas fa-trash"></i> Supprimer
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

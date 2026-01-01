@@ -53,10 +53,14 @@ def create_app():
     from app.routes.main import main_bp
     from app.routes.auth import auth_bp
     from app.routes.admin import admin_bp
+    from app.routes.ebooks import ebooks_bp
+    from app.routes.cineclub import cineclub_bp
     
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(admin_bp, url_prefix='/admin')
+    app.register_blueprint(ebooks_bp)
+    app.register_blueprint(cineclub_bp)
     
     # Gestionnaires d'erreurs personnalisés
     @app.errorhandler(404)
@@ -78,5 +82,13 @@ def create_app():
     # Créer les tables de base de données
     with app.app_context():
         db.create_all()
+    
+    # Context processor pour les templates
+    @app.context_processor
+    def inject_cineclub_settings():
+        def get_cineclub_settings():
+            from app.models import CineClubSettings
+            return CineClubSettings.get_settings()
+        return dict(get_cineclub_settings=get_cineclub_settings)
     
     return app

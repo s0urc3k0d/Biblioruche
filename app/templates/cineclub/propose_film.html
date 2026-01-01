@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Proposer un film - BiblioCinéClub{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('cineclub.index') }}">CinéClub</a></li>
+        <li class="breadcrumb-item active">Proposer un film</li>
+    </ol>
+</nav>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0"><i class="fas fa-film"></i> Proposer un film</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="title" class="form-label">Titre <span class="text-danger">*</span></label>
+                            <input type="text" name="title" id="title" class="form-control" required maxlength="200">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="year" class="form-label">Année</label>
+                            <input type="number" name="year" id="year" class="form-control" min="1888" max="2100">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="original_title" class="form-label">Titre original</label>
+                            <input type="text" name="original_title" id="original_title" class="form-control" maxlength="200">
+                            <div class="form-text">Si différent du titre français</div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="duration" class="form-label">Durée (minutes)</label>
+                            <input type="number" name="duration" id="duration" class="form-control" min="1">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="director" class="form-label">Réalisateur <span class="text-danger">*</span></label>
+                            <input type="text" name="director" id="director" class="form-control" required maxlength="200">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="genre" class="form-label">Genre</label>
+                            <input type="text" name="genre" id="genre" class="form-control" maxlength="100" list="genres-list">
+                            <datalist id="genres-list">
+                                <option value="Action">
+                                <option value="Animation">
+                                <option value="Aventure">
+                                <option value="Comédie">
+                                <option value="Documentaire">
+                                <option value="Drame">
+                                <option value="Fantastique">
+                                <option value="Horreur">
+                                <option value="Policier">
+                                <option value="Romance">
+                                <option value="Science-Fiction">
+                                <option value="Thriller">
+                                <option value="Western">
+                            </datalist>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="synopsis" class="form-label">Synopsis</label>
+                        <textarea name="synopsis" id="synopsis" class="form-control" rows="4" maxlength="2000"></textarea>
+                        <div class="form-text"><span id="synopsis-counter">0</span>/2000 caractères</div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <h5 class="mb-3"><i class="fas fa-link"></i> Liens (optionnels)</h5>
+                    
+                    <div class="mb-3">
+                        <label for="poster_url" class="form-label">
+                            <i class="fas fa-image text-info"></i> URL de l'affiche
+                        </label>
+                        <input type="url" name="poster_url" id="poster_url" class="form-control" maxlength="500">
+                        <div class="form-text">Lien direct vers l'image de l'affiche</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="imdb_url" class="form-label">
+                            <i class="fab fa-imdb text-warning"></i> Lien IMDb
+                        </label>
+                        <input type="url" name="imdb_url" id="imdb_url" class="form-control" maxlength="500" placeholder="https://www.imdb.com/title/...">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="trailer_url" class="form-label">
+                            <i class="fab fa-youtube text-danger"></i> Lien de la bande-annonce
+                        </label>
+                        <input type="url" name="trailer_url" id="trailer_url" class="form-control" maxlength="500" placeholder="https://www.youtube.com/watch?v=...">
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-danger btn-lg">
+                            <i class="fas fa-paper-plane"></i> Soumettre ma proposition
+                        </button>
+                        <a href="{{ url_for('cineclub.list_films') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('synopsis').addEventListener('input', function() {
+    document.getElementById('synopsis-counter').textContent = this.value.length;
+});
+</script>
+{% endblock %}

@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}BiblioCinéClub - BiblioRuche{% endblock %}
+
+{% block content %}
+<div class="text-center mb-5">
+    <h1><i class="fas fa-film text-danger"></i> {{ settings.module_name or 'BiblioCinéClub' }}</h1>
+    <p class="lead text-muted">
+        {{ settings.description or 'Découvrez des films ensemble et partagez vos impressions !' }}
+    </p>
+</div>
+
+<!-- Votes actifs -->
+{% if active_votes %}
+<div class="mb-5">
+    <h2><i class="fas fa-vote-yea text-primary"></i> Votes en cours</h2>
+    <div class="row">
+        {% for vote in active_votes %}
+        <div class="col-md-6 mb-3">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <i class="fas fa-poll"></i> {{ vote.title }}
+                </div>
+                <div class="card-body">
+                    {% if vote.description %}
+                    <p>{{ vote.description }}</p>
+                    {% endif %}
+                    <p class="mb-2">
+                        <i class="fas fa-clock text-warning"></i>
+                        <strong>Fin le :</strong> {{ vote.end_date.strftime('%d/%m/%Y à %H:%M') }}
+                    </p>
+                    <p class="mb-0">
+                        <i class="fas fa-film"></i> {{ vote.options|length }} films en compétition
+                    </p>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('cineclub.vote_detail', vote_id=vote.id) }}" class="btn btn-primary">
+                        <i class="fas fa-vote-yea"></i> Participer au vote
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Prochaines séances -->
+{% if upcoming_viewings %}
+<div class="mb-5">
+    <h2><i class="fas fa-calendar-alt text-success"></i> Prochaines séances</h2>
+    <div class="row">
+        {% for viewing in upcoming_viewings %}
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 {% if viewing.status == 'live' %}border-danger{% endif %}">
+                {% if viewing.status == 'live' %}
+                <div class="card-header bg-danger text-white">
+                    <i class="fas fa-broadcast-tower"></i> EN DIRECT !
+                </div>
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ viewing.film.title }}</h5>
+                    <p class="text-muted">
+                        <i class="fas fa-user"></i> {{ viewing.film.director }}
+                        {% if viewing.film.year %} ({{ viewing.film.year }}){% endif %}
+                    </p>
+                    <p>
+                        <i class="fas fa-calendar"></i> 
+                        {{ viewing.scheduled_date.strftime('%d/%m/%Y à %H:%M') }}
+                    </p>
+                    <p>
+                        <i class="fas fa-users"></i> {{ viewing.get_participants_count() }} inscrits
+                    </p>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('cineclub.viewing_detail', viewing_id=viewing.id) }}" class="btn btn-{% if viewing.status == 'live' %}danger{% else %}success{% endif %} btn-sm">
+                        {% if viewing.status == 'live' %}
+                        <i class="fas fa-play"></i> Rejoindre
+                        {% else %}
+                        <i class="fas fa-info-circle"></i> Détails
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Films récents -->
+<div class="mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2><i class="fas fa-film text-info"></i> Films récemment ajoutés</h2>
+        <a href="{{ url_for('cineclub.list_films') }}" class="btn btn-outline-primary">
+            Voir tous les films <i class="fas fa-arrow-right"></i>
+        </a>
+    </div>
+    
+    {% if recent_films %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for film in recent_films %}
+        <div class="col">
+            <div class="card h-100 hover-lift">
+                {% if film.poster_url %}
+                <img src="{{ film.poster_url }}" class="card-img-top" alt="{{ film.title }}" style="height: 200px; object-fit: cover;">
+                {% else %}
+                <div class="card-img-top bg-dark d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <i class="fas fa-film fa-4x text-muted"></i>
+                </div>
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ film.title }}</h5>
+                    <p class="card-text text-muted">
+                        <i class="fas fa-user"></i> {{ film.director }}
+                        {% if film.year %}<br><i class="fas fa-calendar"></i> {{ film.year }}{% endif %}
+                    </p>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('cineclub.film_detail', film_id=film.id) }}" class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-info-circle"></i> Détails
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-film fa-4x text-muted mb-3"></i>
+        <p class="text-muted">Aucun film pour le moment.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Proposer un film -->
+{% if current_user.is_authenticated %}
+<div class="text-center py-4 bg-light rounded">
+    <h3>Vous avez un film à proposer ?</h3>
+    <p class="text-muted">Partagez vos suggestions avec la communauté !</p>
+    <a href="{{ url_for('cineclub.propose_film') }}" class="btn btn-lg btn-danger">
+        <i class="fas fa-plus-circle"></i> Proposer un film
+    </a>
+</div>
+{% endif %}
+
+<!-- Admin -->
+{% if current_user.is_authenticated and current_user.is_admin %}
+<div class="mt-4 text-center">
+    <a href="{{ url_for('cineclub.admin_dashboard') }}" class="btn btn-warning">
+        <i class="fas fa-cog"></i> Administration CinéClub
+    </a>
+</div>
+{% endif %}
+
+<style>
+.hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+}
+</style>
+{% endblock %}

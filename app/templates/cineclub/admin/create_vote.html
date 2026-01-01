@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Créer un vote - CinéClub Admin{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('cineclub.admin_dashboard') }}">Admin CinéClub</a></li>
+        <li class="breadcrumb-item active">Créer un vote</li>
+    </ol>
+</nav>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-poll"></i> Créer une session de vote</h4>
+            </div>
+            <div class="card-body">
+                {% if not approved_films %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Aucun film approuvé disponible. Approuvez d'abord des films pour créer un vote.
+                </div>
+                {% else %}
+                <form method="post">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Titre du vote <span class="text-danger">*</span></label>
+                        <input type="text" name="title" id="title" class="form-control" required maxlength="200" placeholder="Ex: Vote film de Mars 2024">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea name="description" id="description" class="form-control" rows="3" maxlength="1000"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="end_date" class="form-label">Date de fin du vote <span class="text-danger">*</span></label>
+                        <input type="datetime-local" name="end_date" id="end_date" class="form-control" required>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="mb-4">
+                        <label class="form-label">Sélectionnez les films en compétition <span class="text-danger">*</span></label>
+                        <p class="text-muted small">Cochez au moins 2 films</p>
+                        
+                        <div class="row row-cols-1 row-cols-md-2 g-3">
+                            {% for film in approved_films %}
+                            <div class="col">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <div class="form-check">
+                                            <input type="checkbox" name="film_ids" value="{{ film.id }}" id="film_{{ film.id }}" class="form-check-input">
+                                            <label for="film_{{ film.id }}" class="form-check-label">
+                                                <strong>{{ film.title }}</strong>
+                                                {% if film.year %}({{ film.year }}){% endif %}
+                                                <br>
+                                                <small class="text-muted">{{ film.director }}</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-check"></i> Créer la session de vote
+                        </button>
+                        <a href="{{ url_for('cineclub.admin_dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Annuler
+                        </a>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

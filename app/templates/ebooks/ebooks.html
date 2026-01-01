@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Bibliothèque Ebooks - BiblioRuche{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-tablet-alt text-primary"></i> Bibliothèque Ebooks</h1>
+    {% if current_user.is_authenticated and current_user.is_admin %}
+    <a href="{{ url_for('ebooks.admin_ebooks') }}" class="btn btn-warning">
+        <i class="fas fa-cog"></i> Administration
+    </a>
+    {% endif %}
+</div>
+
+<!-- Barre de recherche et filtres -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" name="search" class="form-control" placeholder="Rechercher un titre ou auteur..." value="{{ search }}">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select name="genre" class="form-select">
+                    <option value="">Tous les genres</option>
+                    {% for g in genres %}
+                    <option value="{{ g }}" {% if g == current_genre %}selected{% endif %}>{{ g }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-filter"></i> Filtrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if not current_user.is_authenticated %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle"></i> 
+    <strong>Connectez-vous</strong> avec votre compte Twitch pour télécharger les ebooks !
+</div>
+{% endif %}
+
+{% if ebooks.items %}
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
+    {% for ebook in ebooks.items %}
+    <div class="col">
+        <div class="card h-100 shadow-sm hover-lift">
+            <!-- Couverture -->
+            <div class="position-relative">
+                {% if ebook.cover_filename %}
+                <img src="{{ url_for('ebooks.get_cover', ebook_id=ebook.id) }}" class="card-img-top" alt="{{ ebook.title }}" style="height: 250px; object-fit: cover;">
+                {% else %}
+                <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 250px;">
+                    <i class="fas fa-book fa-4x text-muted"></i>
+                </div>
+                {% endif %}
+                {% if ebook.genre %}
+                <span class="position-absolute top-0 end-0 badge bg-primary m-2">{{ ebook.genre }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="card-body">
+                <h5 class="card-title">{{ ebook.title }}</h5>
+                <p class="card-text text-muted">
+                    <i class="fas fa-user"></i> {{ ebook.author }}
+                </p>
+                {% if ebook.description %}
+                <p class="card-text small">{{ ebook.description[:100] }}{% if ebook.description|length > 100 %}...{% endif %}</p>
+                {% endif %}
+            </div>
+            
+            <div class="card-footer bg-transparent">
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        <i class="fas fa-file"></i> {{ ebook.get_file_size_display() }}
+                    </small>
+                    <small class="text-muted">
+                        <i class="fas fa-download"></i> {{ ebook.download_count }}
+                    </small>
+                </div>
+                <div class="d-grid gap-2 mt-2">
+                    <a href="{{ url_for('ebooks.ebook_detail', ebook_id=ebook.id) }}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-info-circle"></i> Détails
+                    </a>
+                    {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('ebooks.download_ebook', ebook_id=ebook.id) }}" class="btn btn-success btn-sm">
+                        <i class="fas fa-download"></i> Télécharger EPUB
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if ebooks.pages > 1 %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if ebooks.has_prev %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('ebooks.list_ebooks', page=ebooks.prev_num, search=search, genre=current_genre) }}">
+                <i class="fas fa-chevron-left"></i> Précédent
+            </a>
+        </li>
+        {% endif %}
+        
+        {% for page_num in ebooks.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if page_num %}
+                <li class="page-item {% if page_num == ebooks.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('ebooks.list_ebooks', page=page_num, search=search, genre=current_genre) }}">{{ page_num }}</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+        {% endfor %}
+        
+        {% if ebooks.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('ebooks.list_ebooks', page=ebooks.next_num, search=search, genre=current_genre) }}">
+                Suivant <i class="fas fa-chevron-right"></i>
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-book-open fa-4x text-muted mb-3"></i>
+    <h3>Aucun ebook disponible</h3>
+    <p class="text-muted">La bibliothèque est vide pour le moment.</p>
+</div>
+{% endif %}
+
+<style>
+.hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+}
+</style>
+{% endblock %}

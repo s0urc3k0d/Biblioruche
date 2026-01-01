@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}{{ vote_session.title }} - Vote CinéClub{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('cineclub.index') }}">CinéClub</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('cineclub.list_votes') }}">Votes</a></li>
+        <li class="breadcrumb-item active">{{ vote_session.title }}</li>
+    </ol>
+</nav>
+
+<div class="card shadow mb-4">
+    <div class="card-header bg-{% if vote_session.status == 'active' %}primary{% else %}secondary{% endif %} text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h3 class="mb-0">
+                <i class="fas fa-poll"></i> {{ vote_session.title }}
+            </h3>
+            {% if vote_session.status == 'active' %}
+            <span class="badge bg-success fs-6">Vote ouvert</span>
+            {% else %}
+            <span class="badge bg-secondary fs-6">Vote fermé</span>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card-body">
+        {% if vote_session.description %}
+        <p class="lead">{{ vote_session.description }}</p>
+        {% endif %}
+        
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <i class="fas fa-calendar-alt text-primary"></i> 
+                <strong>Début :</strong> {{ vote_session.start_date.strftime('%d/%m/%Y à %H:%M') }}
+            </div>
+            <div class="col-md-6">
+                <i class="fas fa-calendar-check text-danger"></i> 
+                <strong>Fin :</strong> {{ vote_session.end_date.strftime('%d/%m/%Y à %H:%M') }}
+            </div>
+        </div>
+        
+        {% if vote_session.status == 'closed' and vote_session.winner_film %}
+        <div class="alert alert-success">
+            <h4><i class="fas fa-trophy"></i> Film gagnant !</h4>
+            <p class="mb-0 fs-5">
+                <strong>{{ vote_session.winner_film.title }}</strong> 
+                de {{ vote_session.winner_film.director }}
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Options de vote -->
+<h4 class="mb-3">
+    <i class="fas fa-film"></i> 
+    {% if vote_session.status == 'active' %}Votez pour votre film préféré{% else %}Résultats{% endif %}
+</h4>
+
+{% if vote_session.status == 'active' and current_user.is_authenticated and not user_vote %}
+<form method="post" action="{{ url_for('cineclub.submit_vote', vote_id=vote_session.id) }}">
+{% endif %}
+
+<div class="row row-cols-1 row-cols-md-2 g-4">
+    {% for option in vote_session.options %}
+    <div class="col">
+        <div class="card h-100 {% if vote_session.status == 'closed' and vote_session.winner_film_id == option.film.id %}border-success border-3{% endif %} {% if user_vote and user_vote.vote_option_id == option.id %}border-primary border-3{% endif %}">
+            <div class="row g-0">
+                <div class="col-4">
+                    {% if option.film.poster_url %}
+                    <img src="{{ option.film.poster_url }}" class="img-fluid rounded-start h-100" alt="{{ option.film.title }}" style="object-fit: cover;">
+                    {% else %}
+                    <div class="bg-dark d-flex align-items-center justify-content-center h-100 rounded-start">
+                        <i class="fas fa-film fa-3x text-muted"></i>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-8">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            {{ option.film.title }}
+                            {% if vote_session.status == 'closed' and vote_session.winner_film_id == option.film.id %}
+                            <i class="fas fa-trophy text-warning"></i>
+                            {% endif %}
+                        </h5>
+                        <p class="card-text text-muted">
+                            <i class="fas fa-user"></i> {{ option.film.director }}
+                            {% if option.film.year %}({{ option.film.year }}){% endif %}
+                        </p>
+                        
+                        {% if vote_session.status == 'closed' or (current_user.is_authenticated and current_user.is_admin) %}
+                        <div class="progress mb-2" style="height: 25px;">
+                            {% set total_votes = vote_session.votes|length %}
+                            {% set option_votes = option.get_vote_count() %}
+                            {% set percentage = (option_votes / total_votes * 100) if total_votes > 0 else 0 %}
+                            <div class="progress-bar {% if vote_session.winner_film_id == option.film.id %}bg-success{% else %}bg-primary{% endif %}" role="progressbar" style="width: {{ percentage }}%">
+                                {{ option_votes }} vote{% if option_votes > 1 %}s{% endif %} ({{ percentage|round(1) }}%)
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if vote_session.status == 'active' and current_user.is_authenticated %}
+                            {% if user_vote %}
+                                {% if user_vote.vote_option_id == option.id %}
+                                <span class="badge bg-primary"><i class="fas fa-check"></i> Votre choix</span>
+                                {% endif %}
+                            {% else %}
+                            <div class="form-check">
+                                <input type="radio" name="vote_option_id" value="{{ option.id }}" id="option_{{ option.id }}" class="form-check-input" required>
+                                <label for="option_{{ option.id }}" class="form-check-label">
+                                    Voter pour ce film
+                                </label>
+                            </div>
+                            {% endif %}
+                        {% endif %}
+                        
+                        <a href="{{ url_for('cineclub.film_detail', film_id=option.film.id) }}" class="btn btn-sm btn-outline-info mt-2">
+                            <i class="fas fa-info-circle"></i> Détails
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if vote_session.status == 'active' %}
+    {% if not current_user.is_authenticated %}
+    <div class="alert alert-info mt-4">
+        <i class="fas fa-info-circle"></i> 
+        <a href="{{ url_for('auth.login') }}">Connectez-vous</a> pour participer au vote !
+    </div>
+    {% elif user_vote %}
+    <div class="alert alert-success mt-4">
+        <i class="fas fa-check-circle"></i> 
+        Vous avez déjà voté pour <strong>{{ user_vote.vote_option.film.title }}</strong>.
+        Merci pour votre participation !
+    </div>
+    {% else %}
+    <div class="d-grid mt-4">
+        <button type="submit" class="btn btn-primary btn-lg">
+            <i class="fas fa-vote-yea"></i> Valider mon vote
+        </button>
+    </div>
+    {% endif %}
+{% endif %}
+
+{% if vote_session.status == 'active' and current_user.is_authenticated and not user_vote %}
+</form>
+{% endif %}
+
+<!-- Stats -->
+<div class="card mt-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-around text-center">
+            <div>
+                <h4 class="mb-0">{{ vote_session.options|length }}</h4>
+                <small class="text-muted">Films</small>
+            </div>
+            <div>
+                <h4 class="mb-0">{{ vote_session.votes|length }}</h4>
+                <small class="text-muted">Votes</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if current_user.is_authenticated and current_user.is_admin and vote_session.status == 'active' %}
+<div class="card mt-4 border-warning">
+    <div class="card-header bg-warning text-dark">
+        <i class="fas fa-cog"></i> Administration
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('cineclub.close_vote', vote_id=vote_session.id) }}" method="post" class="d-inline">
+            <button type="submit" class="btn btn-danger" onclick="return confirm('Clôturer ce vote ?');">
+                <i class="fas fa-times-circle"></i> Clôturer le vote
+            </button>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

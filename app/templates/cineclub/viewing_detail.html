@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}{{ viewing.film.title }} - Séance CinéClub{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('cineclub.index') }}">CinéClub</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('cineclub.list_viewings') }}">Séances</a></li>
+        <li class="breadcrumb-item active">{{ viewing.film.title }}</li>
+    </ol>
+</nav>
+
+<!-- Bandeau EN DIRECT -->
+{% if viewing.status == 'live' %}
+<div class="alert alert-danger d-flex align-items-center mb-4">
+    <i class="fas fa-broadcast-tower fa-2x me-3"></i>
+    <div>
+        <h4 class="alert-heading mb-1">EN DIRECT !</h4>
+        <p class="mb-0">Cette séance est actuellement en cours de diffusion.</p>
+    </div>
+    {% if viewing.stream_url %}
+    <a href="{{ viewing.stream_url }}" target="_blank" class="btn btn-danger ms-auto">
+        <i class="fas fa-play"></i> Rejoindre le stream
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+
+<div class="row">
+    <!-- Poster du film -->
+    <div class="col-md-4 mb-4">
+        <div class="card shadow">
+            {% if viewing.film.poster_url %}
+            <img src="{{ viewing.film.poster_url }}" class="card-img-top" alt="{{ viewing.film.title }}">
+            {% else %}
+            <div class="card-img-top bg-dark d-flex align-items-center justify-content-center" style="height: 400px;">
+                <i class="fas fa-film fa-5x text-muted"></i>
+            </div>
+            {% endif %}
+            
+            <div class="card-body">
+                <a href="{{ url_for('cineclub.film_detail', film_id=viewing.film.id) }}" class="btn btn-outline-info w-100">
+                    <i class="fas fa-info-circle"></i> Voir la fiche du film
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Informations séance -->
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-{% if viewing.status == 'live' %}danger{% elif viewing.status == 'completed' %}success{% else %}primary{% endif %} text-white">
+                <h3 class="mb-0">
+                    {% if viewing.status == 'live' %}
+                    <i class="fas fa-broadcast-tower"></i> EN DIRECT
+                    {% elif viewing.status == 'completed' %}
+                    <i class="fas fa-check-circle"></i> Séance terminée
+                    {% elif viewing.status == 'cancelled' %}
+                    <i class="fas fa-times-circle"></i> Annulée
+                    {% else %}
+                    <i class="fas fa-calendar-alt"></i> Séance programmée
+                    {% endif %}
+                </h3>
+            </div>
+            <div class="card-body">
+                <h2>{{ viewing.film.title }}</h2>
+                <p class="text-muted fs-5">
+                    <i class="fas fa-video"></i> {{ viewing.film.director }}
+                    {% if viewing.film.year %}({{ viewing.film.year }}){% endif %}
+                </p>
+                
+                <!-- Date et heure -->
+                <div class="alert alert-light">
+                    <div class="row text-center">
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-calendar text-primary"></i> Date</h5>
+                            <p class="fs-4 mb-0">{{ viewing.scheduled_date.strftime('%d/%m/%Y') }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-clock text-warning"></i> Heure</h5>
+                            <p class="fs-4 mb-0">{{ viewing.scheduled_date.strftime('%H:%M') }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if viewing.description %}
+                <div class="mb-4">
+                    <h5><i class="fas fa-info-circle"></i> Description</h5>
+                    <p>{{ viewing.description }}</p>
+                </div>
+                {% endif %}
+                
+                {% if viewing.stream_url %}
+                <div class="mb-4">
+                    <h5><i class="fas fa-link"></i> Lien du stream</h5>
+                    <a href="{{ viewing.stream_url }}" target="_blank" class="btn btn-lg btn-danger">
+                        <i class="fab fa-twitch"></i> Accéder au stream
+                    </a>
+                </div>
+                {% endif %}
+                
+                <!-- Statistiques -->
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-around text-center">
+                            <div>
+                                <h3 class="mb-0">{{ viewing.get_participants_count() }}</h3>
+                                <small class="text-muted">Participants inscrits</small>
+                            </div>
+                            {% if viewing.film.duration %}
+                            <div>
+                                <h3 class="mb-0">{{ viewing.film.get_duration_display() }}</h3>
+                                <small class="text-muted">Durée du film</small>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Boutons d'inscription -->
+                {% if viewing.status in ['upcoming', 'live'] %}
+                <div class="d-grid gap-2 mt-4">
+                    {% if not current_user.is_authenticated %}
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">
+                        <i class="fab fa-twitch"></i> Connectez-vous pour vous inscrire
+                    </a>
+                    {% elif is_registered %}
+                    <form action="{{ url_for('cineclub.unregister_viewing', viewing_id=viewing.id) }}" method="post">
+                        <button type="submit" class="btn btn-outline-danger btn-lg w-100">
+                            <i class="fas fa-times"></i> Se désinscrire
+                        </button>
+                    </form>
+                    <div class="alert alert-success text-center mb-0">
+                        <i class="fas fa-check-circle"></i> Vous êtes inscrit à cette séance !
+                    </div>
+                    {% else %}
+                    <form action="{{ url_for('cineclub.register_viewing', viewing_id=viewing.id) }}" method="post">
+                        <button type="submit" class="btn btn-success btn-lg w-100">
+                            <i class="fas fa-user-plus"></i> S'inscrire à la séance
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Liste des participants -->
+        {% if viewing.participants %}
+        <div class="card mt-3">
+            <div class="card-header">
+                <i class="fas fa-users"></i> Participants inscrits ({{ viewing.get_participants_count() }})
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2">
+                    {% for participation in viewing.participants %}
+                    <a href="{{ url_for('main.user_profile', user_id=participation.user.id) }}" class="badge bg-secondary text-decoration-none">
+                        <img src="{{ participation.user.avatar_url }}" alt="" width="20" height="20" class="rounded-circle me-1">
+                        {{ participation.user.display_name }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Admin -->
+        {% if current_user.is_authenticated and current_user.is_admin %}
+        <div class="card mt-3 border-warning">
+            <div class="card-header bg-warning text-dark">
+                <i class="fas fa-cog"></i> Administration
+            </div>
+            <div class="card-body">
+                {% if viewing.status == 'upcoming' %}
+                <form action="{{ url_for('cineclub.start_viewing', viewing_id=viewing.id) }}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-broadcast-tower"></i> Démarrer le direct
+                    </button>
+                </form>
+                {% elif viewing.status == 'live' %}
+                <form action="{{ url_for('cineclub.complete_viewing', viewing_id=viewing.id) }}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check"></i> Marquer comme terminée
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

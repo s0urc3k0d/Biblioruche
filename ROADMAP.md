@@ -22,29 +22,29 @@
 
 | # | Description | Fichier(s) concerné(s) | Status |
 |---|-------------|------------------------|--------|
-| C1 | **Protection CSRF manquante sur certaines routes GET sensibles** : Les routes `approve_proposal`, `reject_proposal`, `toggle_admin`, `close_vote` utilisent GET au lieu de POST, ce qui les rend vulnérables aux attaques CSRF | `app/routes/admin.py` | ⏳ À faire |
+| C1 | **Protection CSRF manquante sur certaines routes GET sensibles** : Les routes `approve_proposal`, `reject_proposal`, `toggle_admin`, `close_vote` utilisent GET au lieu de POST, ce qui les rend vulnérables aux attaques CSRF | `app/routes/admin.py` | ✅ Terminé |
 | C2 | **Pas de validation du type de fichier uploadé** : Préparation nécessaire avant l'ajout de la fonctionnalité d'upload d'epub | À créer | ⏳ À faire |
-| C3 | **datetime.now() appelé sans timezone** : Peut causer des incohérences de dates entre serveurs | `app/models.py` | ⏳ À faire |
+| C3 | **datetime.now() appelé sans timezone** : Peut causer des incohérences de dates entre serveurs | `app/models.py` | ✅ Terminé |
 
 ### 🟠 Important (à corriger rapidement)
 
 | # | Description | Fichier(s) concerné(s) | Status |
 |---|-------------|------------------------|--------|
-| I1 | **Pas de limite de taille sur les champs TextArea** : Les descriptions pourraient être trop longues côté client | `app/forms.py`, templates | ⏳ À faire |
-| I2 | **Gestion d'erreur incomplète sur les appels API Twitch** : Si Twitch est down, l'erreur n'est pas bien gérée | `app/routes/auth.py` | ⏳ À faire |
+| I1 | **Pas de limite de taille sur les champs TextArea** : Les descriptions pourraient être trop longues côté client | `app/forms.py`, templates | ✅ Terminé |
+| I2 | **Gestion d'erreur incomplète sur les appels API Twitch** : Si Twitch est down, l'erreur n'est pas bien gérée | `app/routes/auth.py` | ✅ Terminé |
 | I3 | **Pas de confirmation avant actions destructives** : Suppression de lecture, rejet de proposition sans confirmation | `app/templates/admin/*` | ⏳ À faire |
-| I4 | **Vote fermé accessible si URL connue** : Un utilisateur peut voir les résultats même sans avoir voté | `app/routes/main.py` | ⏳ À faire |
-| I5 | **Pas de rate limiting** : Un utilisateur peut spammer les propositions de livres | `app/routes/main.py` | ⏳ À faire |
+| I4 | **Vote fermé accessible si URL connue** : Un utilisateur peut voir les résultats même sans avoir voté | `app/routes/main.py` | ✅ Terminé |
+| I5 | **Pas de rate limiting** : Un utilisateur peut spammer les propositions de livres | `app/routes/main.py` | ✅ Terminé |
 
 ### 🟡 Mineur (à corriger quand possible)
 
 | # | Description | Fichier(s) concerné(s) | Status |
 |---|-------------|------------------------|--------|
-| M1 | **Messages flash non traduits/inconsistants** : Certains en français, d'autres formats différents | Tous les fichiers routes | ⏳ À faire |
-| M2 | **Pagination manquante** : Liste des livres peut devenir très longue | `app/routes/main.py` | ⏳ À faire |
-| M3 | **Pas de gestion des erreurs 404/500 personnalisées** : Pages d'erreur par défaut de Flask | `app/__init__.py` | ⏳ À faire |
-| M4 | **Fichiers de migration orphelins** : Scripts de migration dans `/migrations` sans framework | `migrations/` | ⏳ À faire |
-| M5 | **Console.log potentiels en production** : Vérifier le JS dans les templates | `app/templates/base.html` | ⏳ À faire |
+| M1 | **Messages flash non traduits/inconsistants** : Certains en français, d'autres formats différents | Tous les fichiers routes | ✅ Terminé |
+| M2 | **Pagination manquante** : Liste des livres peut devenir très longue | `app/routes/main.py` | ✅ Terminé |
+| M3 | **Pas de gestion des erreurs 404/500 personnalisées** : Pages d'erreur par défaut de Flask | `app/__init__.py` | ✅ Terminé |
+| M4 | **Fichiers de migration orphelins** : Scripts de migration dans `/migrations` sans framework | `migrations/` | ✅ Terminé |
+| M5 | **Console.log potentiels en production** : Vérifier le JS dans les templates | `app/templates/base.html` | ✅ Terminé |
 
 ---
 
@@ -99,15 +99,15 @@ Module événementiel activable/désactivable par les administrateurs pour organ
 
 | # | Fonctionnalité | Description | Status |
 |---|----------------|-------------|--------|
-| F1 | **Activation/Désactivation globale** | Toggle admin pour activer/masquer tout le module CinéClub | ⏳ À faire |
-| F2 | **Gestion des films (admin)** | CRUD complet pour les films (titre, réalisateur, année, synopsis, affiche, durée) | ⏳ À faire |
-| F3 | **Création de vote film** | Admin crée un vote avec sélection de films | ⏳ À faire |
-| F4 | **Vote utilisateurs** | Les utilisateurs votent pour leur film préféré | ⏳ À faire |
-| F5 | **Session de visionnage** | Programmer une séance avec date/heure, film sélectionné | ⏳ À faire |
-| F6 | **Inscription au visionnage** | Les utilisateurs s'inscrivent à la séance | ⏳ À faire |
-| F7 | **Historique des séances** | Archive des films visionnés | ⏳ À faire |
+| F1 | **Activation/Désactivation globale** | Toggle admin pour activer/masquer tout le module CinéClub | ✅ Terminé |
+| F2 | **Gestion des films (admin)** | CRUD complet pour les films (titre, réalisateur, année, synopsis, affiche, durée) | ✅ Terminé |
+| F3 | **Création de vote film** | Admin crée un vote avec sélection de films | ✅ Terminé |
+| F4 | **Vote utilisateurs** | Les utilisateurs votent pour leur film préféré | ✅ Terminé |
+| F5 | **Session de visionnage** | Programmer une séance avec date/heure, film sélectionné | ✅ Terminé |
+| F6 | **Inscription au visionnage** | Les utilisateurs s'inscrivent à la séance | ✅ Terminé |
+| F7 | **Historique des séances** | Archive des films visionnés | ✅ Terminé |
 | F8 | **Badges CinéClub** | Badges spécifiques (Premier film, Cinéphile, etc.) | ⏳ À faire |
-| F9 | **Masquage dynamique** | Liens et pages masqués quand le module est désactivé | ⏳ À faire |
+| F9 | **Masquage dynamique** | Liens et pages masqués quand le module est désactivé | ✅ Terminé |
 
 #### Modèles de données proposés
 ```python
@@ -314,12 +314,12 @@ class ViewingParticipation(db.Model):
 
 | # | Amélioration | Description | Priorité |
 |---|--------------|-------------|----------|
-| SE1 | **Rate limiting** | Limiter les requêtes par IP/utilisateur | 🟠 Haute |
+| SE1 | **Rate limiting** | Limiter les requêtes par IP/utilisateur | ✅ Terminé |
 | SE2 | **Headers de sécurité** | CSP, X-Frame-Options, etc. | 🟠 Haute |
 | SE3 | **Audit log** | Tracer toutes les actions admin | 🟡 Moyenne |
 | SE4 | **2FA optionnel** | Double authentification pour admins | 🟢 Basse |
 | SE5 | **Rotation des tokens** | Rafraîchir les tokens OAuth | 🟡 Moyenne |
-| SE6 | **Sanitization HTML** | Nettoyer les entrées utilisateur | 🟠 Haute |
+| SE6 | **Sanitization HTML** | Nettoyer les entrées utilisateur | ✅ Terminé |
 | SE7 | **Backup automatique** | Sauvegardes régulières de la BDD | 🟠 Haute |
 
 ---
@@ -338,26 +338,34 @@ class ViewingParticipation(db.Model):
 
 ## 📅 Planning suggéré
 
-### Phase 1 - Stabilisation (2-3 semaines)
-- [ ] Corrections critiques (C1-C3)
-- [ ] Corrections importantes (I1-I5)
-- [ ] Pages d'erreur personnalisées (M3)
-- [ ] Confirmation actions destructives (I3)
+### Phase 1 - Stabilisation ✅ COMPLÉTÉE
+- [x] Corrections critiques (C1, C3) - CSRF + timezone
+- [x] Corrections importantes (I1, I2, I4, I5) - maxlength, Twitch API, rate limiting
+- [x] Pages d'erreur personnalisées (M3) - 404, 500, 403, 429
+- [x] Pagination livres (M2)
+- [x] Sanitisation HTML (SE6) - bleach
+- [x] Réorganisation projet (M4, M5) - scripts/, docs/, tests/
+- [ ] Confirmation actions destructives (I3) - en attente
 
-### Phase 2 - Bibliothèque Ebooks (3-4 semaines)
-- [ ] Modèle de données Ebook
-- [ ] Upload et stockage sécurisé
-- [ ] Page bibliothèque
-- [ ] Intégration avec les lectures
-- [ ] Tests et validation
+### Phase 2 - Bibliothèque Ebooks (3-4 semaines) ✅ COMPLÉTÉE
+- [x] Modèle Ebook en base de données
+- [x] Routes ebooks (Blueprint) avec rate limiting
+- [x] Interface d'upload admin avec validation EPUB
+- [x] Catalogue public avec pagination et filtres
+- [x] Téléchargement pour utilisateurs connectés
+- [x] Gestion des couvertures
+- [x] Liaison optionnelle avec les propositions de livres
 
-### Phase 3 - BiblioCinéClub (4-5 semaines)
-- [ ] Modèles de données Film/Vote/Séance
-- [ ] Routes et templates CinéClub
-- [ ] Système d'activation/désactivation
-- [ ] Interface admin CinéClub
-- [ ] Badges CinéClub
-- [ ] Tests et validation
+### Phase 3 - BibliocinéClub (3-4 semaines) ✅ COMPLÉTÉE
+- [x] Modèles CinéClub (Film, VotingSession, ViewingSession, etc.)
+- [x] Système toggle activation/désactivation
+- [x] Masquage dynamique dans la navigation
+- [x] Routes cineclub (Blueprint)
+- [x] Propositions de films par utilisateurs
+- [x] Système de votes pour films
+- [x] Séances de visionnage avec inscription
+- [x] Interface admin complète
+- [ ] Badges CinéClub (en attente)
 
 ### Phase 4 - Améliorations techniques (2-3 semaines)
 - [ ] Docker et docker-compose
@@ -370,6 +378,7 @@ class ViewingParticipation(db.Model):
 - [ ] Notifications
 - [ ] Statistiques avancées
 - [ ] Améliorations UX
+- [ ] Badges CinéClub
 
 ---
 

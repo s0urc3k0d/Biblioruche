@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Votes - BiblioCinéClub{% endblock %}
+
+{% block content %}
+<h1 class="mb-4"><i class="fas fa-vote-yea text-primary"></i> Sessions de vote</h1>
+
+<!-- Votes actifs -->
+<div class="mb-5">
+    <h3><i class="fas fa-poll text-success"></i> Votes en cours</h3>
+    {% if active_votes %}
+    <div class="row">
+        {% for vote in active_votes %}
+        <div class="col-md-6 mb-3">
+            <div class="card border-success h-100">
+                <div class="card-header bg-success text-white">
+                    <i class="fas fa-poll"></i> {{ vote.title }}
+                </div>
+                <div class="card-body">
+                    {% if vote.description %}
+                    <p>{{ vote.description }}</p>
+                    {% endif %}
+                    <p class="mb-2">
+                        <i class="fas fa-clock text-warning"></i>
+                        <strong>Fin le :</strong> {{ vote.end_date.strftime('%d/%m/%Y à %H:%M') }}
+                    </p>
+                    <p class="mb-2">
+                        <i class="fas fa-film"></i> {{ vote.options|length }} films en compétition
+                    </p>
+                    <p class="mb-0">
+                        <i class="fas fa-users"></i> {{ vote.votes|length }} vote(s) enregistré(s)
+                    </p>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('cineclub.vote_detail', vote_id=vote.id) }}" class="btn btn-success">
+                        <i class="fas fa-vote-yea"></i> Participer
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> Aucun vote en cours pour le moment.
+    </div>
+    {% endif %}
+</div>
+
+<!-- Votes terminés -->
+<div>
+    <h3><i class="fas fa-history text-secondary"></i> Votes terminés</h3>
+    {% if closed_votes %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Titre</th>
+                    <th>Film gagnant</th>
+                    <th>Participations</th>
+                    <th>Date de fin</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for vote in closed_votes %}
+                <tr>
+                    <td>{{ vote.title }}</td>
+                    <td>
+                        {% if vote.winner_film %}
+                        <i class="fas fa-trophy text-warning"></i>
+                        {{ vote.winner_film.title }}
+                        {% else %}
+                        <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ vote.votes|length }} votes</td>
+                    <td>{{ vote.end_date.strftime('%d/%m/%Y') }}</td>
+                    <td>
+                        <a href="{{ url_for('cineclub.vote_detail', vote_id=vote.id) }}" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-chart-bar"></i> Résultats
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-secondary">
+        <i class="fas fa-info-circle"></i> Aucun vote terminé.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

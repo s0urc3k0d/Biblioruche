@@ -228,3 +228,208 @@ class UserBadge(db.Model):
     
     def __repr__(self):
         return f'<UserBadge {self.user.username} - {self.badge.name}>'
+
+
+# =============================================================================
+# MODÈLES BIBLIOTHÈQUE EBOOKS
+# =============================================================================
+
+class Ebook(db.Model):
+    """Modèle pour les ebooks de la bibliothèque"""
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    author = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    isbn = db.Column(db.String(20))
+    genre = db.Column(db.String(100))
+    publication_year = db.Column(db.Integer)
+    pages_count = db.Column(db.Integer)
+    
+    # Fichier EPUB
+    filename = db.Column(db.String(255), nullable=False)  # Nom du fichier stocké
+    original_filename = db.Column(db.String(255), nullable=False)  # Nom original
+    file_size = db.Column(db.Integer)  # Taille en bytes
+    
+    # Image de couverture (optionnelle)
+    cover_filename = db.Column(db.String(255))
+    
+    # Métadonnées
+    download_count = db.Column(db.Integer, default=0)
+    is_visible = db.Column(db.Boolean, default=True, nullable=False)
+    uploaded_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=utc_now)
+    updated_at = db.Column(db.DateTime, default=utc_now, onupdate=utc_now)
+    
+    # Lien optionnel vers une proposition de livre existante
+    book_proposal_id = db.Column(db.Integer, db.ForeignKey('book_proposal.id'))
+    
+    # Relations
+    uploader = db.relationship('User', backref='uploaded_ebooks')
+    book_proposal = db.relationship('BookProposal', backref='ebook')
+    
+    def get_file_size_display(self):
+        """Affiche la taille du fichier de manière lisible"""
+        if not self.file_size:
+            return "Inconnu"
+        size = self.file_size
+        for unit in ['B', 'KB', 'MB', 'GB']:
+            if size < 1024:
+                return f"{size:.1f} {unit}"
+            size /= 1024
+        return f"{size:.1f} TB"
+    
+    def __repr__(self):
+        return f'<Ebook {self.title} by {self.author}>'
+
+
+# =============================================================================
+# MODÈLES BIBLIOCINECLUB
+# =============================================================================
+
+class CineClubSettings(db.Model):
+    """Configuration globale du module CinéClub"""
+    id = db.Column(db.Integer, primary_key=True)
+    is_enabled = db.Column(db.Boolean, default=False, nullable=False)
+    module_name = db.Column(db.String(100), default='BiblioCinéClub')
+    description = db.Column(db.Text)
+    updated_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    updated_at = db.Column(db.DateTime, default=utc_now, onupdate=utc_now)
+    
+    # Relations
+    updater = db.relationship('User', backref='cineclub_settings_updates')
+    
+    @staticmethod
+    def get_settings():
+        """Récupère ou crée les paramètres du CinéClub"""
+        settings = CineClubSettings.query.first()
+        if not settings:
+            settings = CineClubSettings(is_enabled=False)
+            db.session.add(settings)
+            db.session.commit()
+        return settings
+
+
+class Film(db.Model):
+    """Modèle pour les films proposés/votés"""
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    original_title = db.Column(db.String(200))  # Titre original si étranger
+    director = db.Column(db.String(200), nullable=False)
+    year = db.Column(db.Integer)
+    genre = db.Column(db.String(100))
+    duration = db.Column(db.Integer)  # Durée en minutes
+    synopsis = db.Column(db.Text)
+    poster_url = db.Column(db.String(500))  # URL de l'affiche
+    imdb_url = db.Column(db.String(500))
+    trailer_url = db.Column(db.String(500))  # URL YouTube/autre
+    
+    # Métadonnées
+    proposed_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    status = db.Column(db.String(20), default='pending', nullable=False)  # pending, approved, selected, viewed, archived
+    created_at = db.Column(db.DateTime, default=utc_now)
+    
+    # Relations
+    proposer = db.relationship('User', backref='proposed_films')
+    
+    def get_duration_display(self):
+        """Affiche la durée en format heures:minutes"""
+        if not self.duration:
+            return "Durée inconnue"
+        hours = self.duration // 60
+        minutes = self.duration % 60
+        if hours > 0:
+            return f"{hours}h{minutes:02d}"
+        return f"{minutes} min"
+    
+    def __repr__(self):
+        return f'<Film {self.title} ({self.year})>'
+
+
+class FilmVotingSession(db.Model):
+    """Session de vote pour choisir un film"""
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    start_date = db.Column(db.DateTime, default=utc_now)
+    end_date = db.Column(db.DateTime, nullable=False)
+    status = db.Column(db.String(20), default='active', nullable=False)  # active, closed
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    winner_film_id = db.Column(db.Integer, db.ForeignKey('film.id'))
+    
+    # Relations
+    creator = db.relationship('User', backref='created_film_votes')
+    winner_film = db.relationship('Film', foreign_keys=[winner_film_id])
+    options = db.relationship('FilmVoteOption', backref='voting_session', lazy=True)
+    votes = db.relationship('FilmVote', backref='voting_session', lazy=True)
+    
+    def __repr__(self):
+        return f'<FilmVotingSession {self.title}>'
+
+
+class FilmVoteOption(db.Model):
+    """Options de vote (films candidats) dans une session"""
+    id = db.Column(db.Integer, primary_key=True)
+    voting_session_id = db.Column(db.Integer, db.ForeignKey('film_voting_session.id'), nullable=False)
+    film_id = db.Column(db.Integer, db.ForeignKey('film.id'), nullable=False)
+    
+    # Relations
+    film = db.relationship('Film')
+    
+    def get_vote_count(self):
+        return FilmVote.query.filter_by(vote_option_id=self.id).count()
+
+
+class FilmVote(db.Model):
+    """Vote d'un utilisateur pour un film"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    voting_session_id = db.Column(db.Integer, db.ForeignKey('film_voting_session.id'), nullable=False)
+    vote_option_id = db.Column(db.Integer, db.ForeignKey('film_vote_option.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=utc_now)
+    
+    # Relations
+    voter = db.relationship('User', backref='film_votes')
+    vote_option = db.relationship('FilmVoteOption')
+    
+    # Unique constraint - un vote par utilisateur par session
+    __table_args__ = (db.UniqueConstraint('user_id', 'voting_session_id', name='unique_user_film_vote'),)
+
+
+class ViewingSession(db.Model):
+    """Session de visionnage planifiée"""
+    id = db.Column(db.Integer, primary_key=True)
+    film_id = db.Column(db.Integer, db.ForeignKey('film.id'), nullable=False)
+    scheduled_date = db.Column(db.DateTime, nullable=False)
+    stream_url = db.Column(db.String(500))  # URL du stream Twitch/Discord
+    status = db.Column(db.String(20), default='upcoming', nullable=False)  # upcoming, live, completed, cancelled
+    description = db.Column(db.Text)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=utc_now)
+    
+    # Relations
+    film = db.relationship('Film', backref='viewing_sessions')
+    creator = db.relationship('User', backref='created_viewing_sessions')
+    
+    def get_participants_count(self):
+        return len(self.participants)
+    
+    def is_user_registered(self, user_id):
+        return any(p.user_id == user_id for p in self.participants)
+    
+    def __repr__(self):
+        return f'<ViewingSession {self.film.title}>'
+
+
+class ViewingParticipation(db.Model):
+    """Participation d'un utilisateur à une séance de visionnage"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    viewing_session_id = db.Column(db.Integer, db.ForeignKey('viewing_session.id'), nullable=False)
+    joined_at = db.Column(db.DateTime, default=utc_now)
+    
+    # Relations
+    user = db.relationship('User', backref='viewing_participations')
+    viewing_session = db.relationship('ViewingSession', backref='participants')
+    
+    # Unique constraint
+    __table_args__ = (db.UniqueConstraint('user_id', 'viewing_session_id', name='unique_user_viewing_participation'),)
