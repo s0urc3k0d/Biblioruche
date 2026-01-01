@@ -139,7 +139,7 @@ services:
       - SECRET_KEY=${SECRET_KEY}
       - TWITCH_CLIENT_ID=${TWITCH_CLIENT_ID}
       - TWITCH_CLIENT_SECRET=${TWITCH_CLIENT_SECRET}
-      - TWITCH_REDIRECT_URI=https://biblioruche.sourcekod.fr/auth/callback
+      - TWITCH_REDIRECT_URI=${TWITCH_REDIRECT_URI}
       - ADMIN_TWITCH_USERNAMES=${ADMIN_TWITCH_USERNAMES}
     volumes:
       - ./instance:/app/instance
@@ -168,6 +168,7 @@ SECRET_KEY=VOTRE_CLE_SECRETE_TRES_LONGUE_ET_ALEATOIRE
 # Configuration Twitch OAuth
 TWITCH_CLIENT_ID=votre_client_id_twitch
 TWITCH_CLIENT_SECRET=votre_client_secret_twitch
+TWITCH_REDIRECT_URI=https://biblioruche.sourcekod.fr/auth/callback
 
 # Administrateurs Twitch (noms d'utilisateurs séparés par des virgules)
 # Ces utilisateurs auront automatiquement les droits admin lors de leur connexion
@@ -181,6 +182,8 @@ python3 -c "import secrets; print(secrets.token_hex(32))"
 ```
 
 > 📝 **Note sur les admins** : Si vous ne définissez pas `ADMIN_TWITCH_USERNAMES`, les valeurs par défaut (`lantredesilver,wenyn`) seront utilisées. Modifiez cette liste selon vos besoins.
+
+> ⚠️ **Important** : L'URL `TWITCH_REDIRECT_URI` doit correspondre **exactement** à celle configurée dans la [console Twitch Developer](https://dev.twitch.tv/console/apps).
 
 ### 3.4 Créer le dossier instance (pour la BDD SQLite)
 
