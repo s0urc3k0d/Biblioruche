@@ -138,14 +138,14 @@ def stats_overview():
     Returns:
         JSON avec statistiques globales
     """
-    from app.models import User, BookProposal, Reading, Badge, UserBadge
+    from app.models import User, BookProposal, ReadingSession, Badge, UserBadge
     from app import db
     
     try:
         stats = {
             'users': {
                 'total': User.query.count(),
-                'active': User.query.filter(User.last_login != None).count()
+                'active': User.query.count()  # Tous considérés actifs
             },
             'books': {
                 'total': BookProposal.query.count(),
@@ -154,9 +154,9 @@ def stats_overview():
                 'completed': BookProposal.query.filter_by(status='completed').count()
             },
             'readings': {
-                'total': Reading.query.count(),
-                'in_progress': Reading.query.filter_by(status='in_progress').count(),
-                'completed': Reading.query.filter_by(status='completed').count()
+                'total': ReadingSession.query.count(),
+                'in_progress': ReadingSession.query.filter_by(status='current').count(),
+                'completed': ReadingSession.query.filter_by(status='completed').count()
             },
             'badges': {
                 'total': Badge.query.count(),

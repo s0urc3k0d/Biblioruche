@@ -5,7 +5,7 @@ Tests pour les modèles BiblioRuche
 
 import pytest
 from datetime import datetime
-from app.models import User, BookProposal, Badge, Reading
+from app.models import User, BookProposal, Badge, ReadingSession
 
 
 class TestUserModel:
@@ -140,14 +140,14 @@ class TestBadgeModel:
         assert len(cineclub_badges) == 1
 
 
-class TestReadingModel:
-    """Tests pour le modèle Reading"""
+class TestReadingSessionModel:
+    """Tests pour le modèle ReadingSession"""
     
     def test_create_reading(self, db_session, test_book):
         """Test création d'une lecture"""
-        reading = Reading(
+        reading = ReadingSession(
             book_id=test_book.id,
-            status='planned',
+            status='upcoming',
             start_date=datetime.utcnow()
         )
         db_session.add(reading)
@@ -155,11 +155,11 @@ class TestReadingModel:
         
         assert reading.id is not None
         assert reading.book_id == test_book.id
-        assert reading.status == 'planned'
+        assert reading.status == 'upcoming'
     
     def test_reading_statuses(self, db_session, test_book):
         """Test différents statuts de lecture"""
-        statuses = ['planned', 'in_progress', 'completed']
+        statuses = ['upcoming', 'current', 'completed']
         
         for i, status in enumerate(statuses):
             # Créer un nouveau livre pour chaque lecture
@@ -172,7 +172,7 @@ class TestReadingModel:
             db_session.add(book)
             db_session.commit()
             
-            reading = Reading(
+            reading = ReadingSession(
                 book_id=book.id,
                 status=status
             )
