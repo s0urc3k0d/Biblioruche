@@ -103,12 +103,25 @@
                         </label>
                         <select name="book_proposal_id" id="book_proposal_id" class="form-select">
                             <option value="">-- Aucune liaison --</option>
-                            {% for book in approved_books %}
-                            <option value="{{ book.id }}">{{ book.title }} - {{ book.author }}</option>
+                            {% for book in available_books %}
+                            <option value="{{ book.id }}" 
+                                    data-title="{{ book.title }}"
+                                    data-author="{{ book.author }}"
+                                    data-description="{{ book.description or '' }}"
+                                    data-genre="{{ book.genre or '' }}"
+                                    data-isbn="{{ book.isbn or '' }}"
+                                    data-year="{{ book.publication_year or '' }}"
+                                    data-pages="{{ book.pages_count or '' }}">
+                                {{ book.title }} - {{ book.author }}
+                                {% if book.status == 'reading' %}(En lecture){% endif %}
+                                {% if book.status == 'finished' %}(Terminé){% endif %}
+                                {% if book.status == 'archived' %}(Archivé){% endif %}
+                            </option>
                             {% endfor %}
                         </select>
                         <div class="form-text">
-                            Permet de lier cet ebook à un livre de la bibliothèque BiblioRuche
+                            <i class="fas fa-magic text-success"></i> 
+                            Sélectionner un livre remplira automatiquement les informations ci-dessus
                         </div>
                     </div>
                     
@@ -140,6 +153,57 @@
 // Compteur de caractères pour la description
 document.getElementById('description').addEventListener('input', function() {
     document.getElementById('desc-counter').textContent = this.value.length;
+});
+
+// Auto-remplissage quand on sélectionne un livre
+document.getElementById('book_proposal_id').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    
+    if (this.value === '') {
+        // Aucune sélection, on ne fait rien
+        return;
+    }
+    
+    // Récupérer les données depuis les attributs data-*
+    const title = selectedOption.dataset.title || '';
+    const author = selectedOption.dataset.author || '';
+    const description = selectedOption.dataset.description || '';
+    const genre = selectedOption.dataset.genre || '';
+    const isbn = selectedOption.dataset.isbn || '';
+    const year = selectedOption.dataset.year || '';
+    const pages = selectedOption.dataset.pages || '';
+    
+    // Demander confirmation si des champs sont déjà remplis
+    const titleField = document.getElementById('title');
+    const authorField = document.getElementById('author');
+    
+    if (titleField.value || authorField.value) {
+        if (!confirm('Voulez-vous écraser les informations actuelles avec celles du livre sélectionné ?')) {
+            return;
+        }
+    }
+    
+    // Remplir les champs
+    titleField.value = title;
+    authorField.value = author;
+    document.getElementById('description').value = description;
+    document.getElementById('desc-counter').textContent = description.length;
+    document.getElementById('genre').value = genre;
+    document.getElementById('isbn').value = isbn;
+    document.getElementById('publication_year').value = year;
+    document.getElementById('pages_count').value = pages;
+    
+    // Notification visuelle
+    const flash = document.createElement('div');
+    flash.className = 'alert alert-success alert-dismissible fade show mt-3';
+    flash.innerHTML = `
+        <i class="fas fa-check-circle"></i> Informations du livre "<strong>${title}</strong>" importées !
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    this.parentNode.appendChild(flash);
+    
+    // Supprimer l'alerte après 3 secondes
+    setTimeout(() => flash.remove(), 3000);
 });
 </script>
 {% endblock %}

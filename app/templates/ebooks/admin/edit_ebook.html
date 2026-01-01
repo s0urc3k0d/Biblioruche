@@ -106,12 +106,27 @@
                         </label>
                         <select name="book_proposal_id" id="book_proposal_id" class="form-select">
                             <option value="">-- Aucune liaison --</option>
-                            {% for book in approved_books %}
-                            <option value="{{ book.id }}" {% if ebook.book_proposal_id == book.id %}selected{% endif %}>
+                            {% for book in available_books %}
+                            <option value="{{ book.id }}" 
+                                    {% if ebook.book_proposal_id == book.id %}selected{% endif %}
+                                    data-title="{{ book.title }}"
+                                    data-author="{{ book.author }}"
+                                    data-description="{{ book.description or '' }}"
+                                    data-genre="{{ book.genre or '' }}"
+                                    data-isbn="{{ book.isbn or '' }}"
+                                    data-year="{{ book.publication_year or '' }}"
+                                    data-pages="{{ book.pages_count or '' }}">
                                 {{ book.title }} - {{ book.author }}
+                                {% if book.status == 'reading' %}(En lecture){% endif %}
+                                {% if book.status == 'finished' %}(Terminé){% endif %}
+                                {% if book.status == 'archived' %}(Archivé){% endif %}
                             </option>
                             {% endfor %}
                         </select>
+                        <div class="form-text">
+                            <i class="fas fa-magic text-success"></i> 
+                            Changer de livre peut importer ses informations (après confirmation)
+                        </div>
                     </div>
                     
                     <!-- Visibilité -->
@@ -142,6 +157,40 @@
 // Compteur de caractères
 document.getElementById('description').addEventListener('input', function() {
     document.getElementById('desc-counter').textContent = this.value.length;
+});
+
+// Auto-remplissage quand on change de livre lié
+document.getElementById('book_proposal_id').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    
+    if (this.value === '') {
+        return;
+    }
+    
+    // Demander confirmation avant d'écraser
+    if (!confirm('Voulez-vous importer les informations du livre sélectionné ? Cela écrasera les données actuelles.')) {
+        return;
+    }
+    
+    // Récupérer les données depuis les attributs data-*
+    document.getElementById('title').value = selectedOption.dataset.title || '';
+    document.getElementById('author').value = selectedOption.dataset.author || '';
+    document.getElementById('description').value = selectedOption.dataset.description || '';
+    document.getElementById('desc-counter').textContent = (selectedOption.dataset.description || '').length;
+    document.getElementById('genre').value = selectedOption.dataset.genre || '';
+    document.getElementById('isbn').value = selectedOption.dataset.isbn || '';
+    document.getElementById('publication_year').value = selectedOption.dataset.year || '';
+    document.getElementById('pages_count').value = selectedOption.dataset.pages || '';
+    
+    // Notification visuelle
+    const flash = document.createElement('div');
+    flash.className = 'alert alert-success alert-dismissible fade show mt-3';
+    flash.innerHTML = `
+        <i class="fas fa-check-circle"></i> Informations importées depuis "<strong>${selectedOption.dataset.title}</strong>"
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    this.parentNode.appendChild(flash);
+    setTimeout(() => flash.remove(), 3000);
 });
 </script>
 {% endblock %}

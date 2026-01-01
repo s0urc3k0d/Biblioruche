@@ -76,6 +76,33 @@ def admin_required(f):
 
 
 # =============================================================================
+# API POUR L'ADMIN
+# =============================================================================
+
+@ebooks_bp.route('/api/book/<int:book_id>')
+@login_required
+@admin_required
+def get_book_details(book_id):
+    """API pour récupérer les détails d'un livre (pour l'auto-remplissage)"""
+    book = BookProposal.query.get_or_404(book_id)
+    return {
+        'success': True,
+        'book': {
+            'id': book.id,
+            'title': book.title,
+            'author': book.author,
+            'description': book.description or '',
+            'genre': book.genre or '',
+            'isbn': book.isbn or '',
+            'publication_year': book.publication_year,
+            'pages_count': book.pages_count,
+            'publisher': book.publisher or '',
+            'cover_url': book.cover_url or ''
+        }
+    }
+
+
+# =============================================================================
 # ROUTES PUBLIQUES
 # =============================================================================
 
@@ -207,8 +234,10 @@ def admin_ebooks():
 @admin_required
 def upload_ebook():
     """Upload d'un nouvel ebook"""
-    # Récupérer les livres approuvés pour la liaison optionnelle
-    approved_books = BookProposal.query.filter_by(status='approved').order_by(BookProposal.title).all()
+    # Récupérer tous les livres disponibles (approuvés, en lecture, terminés, archivés)
+    available_books = BookProposal.query.filter(
+        BookProposal.status.in_(['approved', 'reading', 'finished', 'archived'])
+    ).order_by(BookProposal.title).all()
     
     if request.method == 'POST':
         # Vérifier le fichier EPUB
@@ -286,7 +315,7 @@ def upload_ebook():
         flash(f'Ebook "{ebook.title}" uploadé avec succès !', 'success')
         return redirect(url_for('ebooks.admin_ebooks'))
     
-    return render_template('ebooks/admin/upload_ebook.html', approved_books=approved_books)
+    return render_template('ebooks/admin/upload_ebook.html', available_books=available_books)
 
 
 @ebooks_bp.route('/admin/edit/<int:ebook_id>', methods=['GET', 'POST'])
@@ -295,7 +324,10 @@ def upload_ebook():
 def edit_ebook(ebook_id):
     """Modifier les informations d'un ebook"""
     ebook = Ebook.query.get_or_404(ebook_id)
-    approved_books = BookProposal.query.filter_by(status='approved').order_by(BookProposal.title).all()
+    # Récupérer tous les livres disponibles (approuvés, en lecture, terminés, archivés)
+    available_books = BookProposal.query.filter(
+        BookProposal.status.in_(['approved', 'reading', 'finished', 'archived'])
+    ).order_by(BookProposal.title).all()
     
     if request.method == 'POST':
         ebook.title = request.form.get('title', '').strip()
@@ -331,7 +363,7 @@ def edit_ebook(ebook_id):
         flash(f'Ebook "{ebook.title}" modifié avec succès !', 'success')
         return redirect(url_for('ebooks.admin_ebooks'))
     
-    return render_template('ebooks/admin/edit_ebook.html', ebook=ebook, approved_books=approved_books)
+    return render_template('ebooks/admin/edit_ebook.html', ebook=ebook, available_books=available_books)
 
 
 @ebooks_bp.route('/admin/delete/<int:ebook_id>', methods=['POST'])
