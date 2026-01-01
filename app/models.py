@@ -265,7 +265,7 @@ class Ebook(db.Model):
     
     # Relations
     uploader = db.relationship('User', backref='uploaded_ebooks')
-    book_proposal = db.relationship('BookProposal', backref='ebook')
+    book_proposal = db.relationship('BookProposal', backref=db.backref('ebook', uselist=False))
     
     def get_file_size_display(self):
         """Affiche la taille du fichier de manière lisible"""
