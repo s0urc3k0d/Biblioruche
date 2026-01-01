@@ -76,14 +76,14 @@ def setup_security_headers(app):
         response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
         
         # Content Security Policy (CSP) - adaptée pour BiblioRuche
-        # Autorise Bootstrap, FontAwesome, Chart.js, Open Library covers
+        # Autorise Bootstrap, FontAwesome, Chart.js, Open Library covers, Google Books API
         csp = (
             "default-src 'self'; "
             "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
             "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
             "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
             "img-src 'self' data: https: blob:; "
-            "connect-src 'self' https://openlibrary.org https://covers.openlibrary.org; "
+            "connect-src 'self' https://openlibrary.org https://covers.openlibrary.org https://www.googleapis.com https://cdn.jsdelivr.net; "
             "frame-ancestors 'self';"
         )
         response.headers['Content-Security-Policy'] = csp

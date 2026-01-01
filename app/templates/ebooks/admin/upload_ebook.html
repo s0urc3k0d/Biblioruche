@@ -114,7 +114,7 @@
                                     data-pages="{{ book.pages_count or '' }}">
                                 {{ book.title }} - {{ book.author }}
                                 {% if book.status == 'reading' %}(En lecture){% endif %}
-                                {% if book.status == 'finished' %}(Terminé){% endif %}
+                                {% if book.status == 'completed' %}(Terminé){% endif %}
                                 {% if book.status == 'archived' %}(Archivé){% endif %}
                             </option>
                             {% endfor %}

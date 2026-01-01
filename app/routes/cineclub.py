@@ -146,7 +146,7 @@ def propose_film():
     """Proposer un nouveau film (admin uniquement) - CinéBookClub"""
     # Récupérer les livres disponibles pour liaison
     available_books = BookProposal.query.filter(
-        BookProposal.status.in_(['approved', 'reading', 'finished', 'archived'])
+        BookProposal.status.in_(['approved', 'reading', 'completed', 'archived'])
     ).order_by(BookProposal.title).all()
     
     if request.method == 'POST':
@@ -445,7 +445,7 @@ def edit_film(film_id):
     
     # Récupérer les livres disponibles pour liaison
     available_books = BookProposal.query.filter(
-        BookProposal.status.in_(['approved', 'reading', 'finished', 'archived'])
+        BookProposal.status.in_(['approved', 'reading', 'completed', 'archived'])
     ).order_by(BookProposal.title).all()
     
     if request.method == 'POST':

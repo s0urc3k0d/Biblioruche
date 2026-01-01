@@ -236,7 +236,7 @@ def upload_ebook():
     """Upload d'un nouvel ebook"""
     # Récupérer tous les livres disponibles (approuvés, en lecture, terminés, archivés)
     available_books = BookProposal.query.filter(
-        BookProposal.status.in_(['approved', 'reading', 'finished', 'archived'])
+        BookProposal.status.in_(['approved', 'reading', 'completed', 'archived'])
     ).order_by(BookProposal.title).all()
     
     if request.method == 'POST':
@@ -326,7 +326,7 @@ def edit_ebook(ebook_id):
     ebook = Ebook.query.get_or_404(ebook_id)
     # Récupérer tous les livres disponibles (approuvés, en lecture, terminés, archivés)
     available_books = BookProposal.query.filter(
-        BookProposal.status.in_(['approved', 'reading', 'finished', 'archived'])
+        BookProposal.status.in_(['approved', 'reading', 'completed', 'archived'])
     ).order_by(BookProposal.title).all()
     
     if request.method == 'POST':
