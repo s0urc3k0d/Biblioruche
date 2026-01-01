@@ -1,23 +1,23 @@
 {% extends "base.html" %}
 
-{% block title %}Administration CinéClub - BiblioRuche{% endblock %}
+{% block title %}Administration CinéBookClub - BiblioRuche{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1><i class="fas fa-film text-warning"></i> Administration CinéClub</h1>
+    <h1><i class="fas fa-film text-warning"></i> Administration CinéBookClub</h1>
     <a href="{{ url_for('cineclub.index') }}" class="btn btn-outline-primary">
-        <i class="fas fa-arrow-left"></i> Retour au CinéClub
+        <i class="fas fa-arrow-left"></i> Retour au CinéBookClub
     </a>
 </div>
 
-<!-- Toggle CinéClub -->
+<!-- Toggle CinéBookClub -->
 <div class="card mb-4 {% if settings.is_enabled %}border-success{% else %}border-danger{% endif %}">
     <div class="card-body">
         <div class="d-flex justify-content-between align-items-center">
             <div>
                 <h4 class="mb-1">
                     <i class="fas fa-{% if settings.is_enabled %}toggle-on text-success{% else %}toggle-off text-danger{% endif %}"></i>
-                    Module CinéClub
+                    Module CinéBookClub
                 </h4>
                 <p class="mb-0 text-muted">
                     {% if settings.is_enabled %}
@@ -39,33 +39,20 @@
 
 <!-- Stats -->
 <div class="row mb-4">
-    <div class="col-md-3">
+    <div class="col-md-4">
         <div class="card bg-info text-white">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h3 class="mb-0">{{ stats.total_films }}</h3>
-                        <small>Films</small>
+                        <small>Combos Livre+Film</small>
                     </div>
                     <i class="fas fa-film fa-2x opacity-50"></i>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card bg-warning text-dark">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h3 class="mb-0">{{ stats.pending_films }}</h3>
-                        <small>En attente</small>
-                    </div>
-                    <i class="fas fa-clock fa-2x opacity-50"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
+    <div class="col-md-4">
         <div class="card bg-primary text-white">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
@@ -78,7 +65,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-4">
         <div class="card bg-success text-white">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
@@ -95,62 +82,75 @@
 
 <!-- Actions rapides -->
 <div class="row mb-4">
-    <div class="col-md-6">
-        <a href="{{ url_for('cineclub.create_vote') }}" class="btn btn-primary btn-lg w-100">
-            <i class="fas fa-poll"></i> Créer une session de vote
+    <div class="col-md-4">
+        <a href="{{ url_for('cineclub.propose_film') }}" class="btn btn-danger btn-lg w-100">
+            <i class="fas fa-plus-circle"></i> Ajouter un combo
         </a>
     </div>
-    <div class="col-md-6">
+    <div class="col-md-4">
+        <a href="{{ url_for('cineclub.create_vote') }}" class="btn btn-primary btn-lg w-100">
+            <i class="fas fa-poll"></i> Créer un vote
+        </a>
+    </div>
+    <div class="col-md-4">
         <a href="{{ url_for('cineclub.create_viewing') }}" class="btn btn-success btn-lg w-100">
-            <i class="fas fa-calendar-plus"></i> Planifier une séance
+            <i class="fas fa-calendar-plus"></i> Planifier un débrief
         </a>
     </div>
 </div>
 
-<!-- Films en attente de modération -->
+<!-- Liste des combos récents -->
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <span><i class="fas fa-clock"></i> Films en attente de modération</span>
-        <span class="badge bg-warning">{{ pending_films|length }}</span>
+        <span><i class="fas fa-film"></i> Combos Livre+Film récents</span>
+        <a href="{{ url_for('cineclub.list_films') }}" class="btn btn-sm btn-outline-primary">Voir tous</a>
     </div>
     <div class="card-body p-0">
-        {% if pending_films %}
+        {% set recent_combos = Film.query.filter(Film.status.in_(['approved', 'selected', 'viewed'])).order_by(Film.created_at.desc()).limit(5).all() %}
+        {% if recent_combos %}
         <div class="table-responsive">
             <table class="table table-hover mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th>Titre</th>
+                        <th>Film</th>
+                        <th>Livre associé</th>
                         <th>Réalisateur</th>
-                        <th>Proposé par</th>
-                        <th>Date</th>
+                        <th>Plateformes</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for film in pending_films %}
+                    {% for film in recent_combos %}
                     <tr>
                         <td>
                             <a href="{{ url_for('cineclub.film_detail', film_id=film.id) }}">{{ film.title }}</a>
                             {% if film.year %}({{ film.year }}){% endif %}
                         </td>
+                        <td>
+                            {% if film.book %}
+                            <a href="{{ url_for('main.book_detail', book_id=film.book.id) }}" class="text-primary">
+                                <i class="fas fa-book"></i> {{ film.book.title|truncate(30) }}
+                            </a>
+                            {% else %}
+                            <span class="text-muted">Non associé</span>
+                            {% endif %}
+                        </td>
                         <td>{{ film.director }}</td>
                         <td>
-                            <a href="{{ url_for('main.user_profile', user_id=film.proposer.id) }}">
-                                {{ film.proposer.display_name }}
-                            </a>
+                            {% set platforms_display = film.get_platforms_display() %}
+                            {% for platform in platforms_display[:3] %}
+                            <span class="badge rounded-pill" style="background-color: {{ platform.color }}; font-size: 0.65em;" title="{{ platform.name }}">
+                                <i class="{{ platform.icon }}"></i>
+                            </span>
+                            {% endfor %}
+                            {% if platforms_display|length > 3 %}
+                            <span class="badge bg-secondary rounded-pill" style="font-size: 0.65em;">+{{ platforms_display|length - 3 }}</span>
+                            {% endif %}
                         </td>
-                        <td>{{ film.created_at.strftime('%d/%m/%Y') }}</td>
                         <td>
-                            <form action="{{ url_for('cineclub.approve_film', film_id=film.id) }}" method="post" class="d-inline">
-                                <button type="submit" class="btn btn-sm btn-success" title="Approuver">
-                                    <i class="fas fa-check"></i>
-                                </button>
-                            </form>
-                            <form action="{{ url_for('cineclub.reject_film', film_id=film.id) }}" method="post" class="d-inline">
-                                <button type="submit" class="btn btn-sm btn-danger" title="Rejeter" onclick="return confirm('Rejeter ce film ?');">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </form>
+                            <a href="{{ url_for('cineclub.edit_film', film_id=film.id) }}" class="btn btn-sm btn-outline-primary" title="Éditer">
+                                <i class="fas fa-edit"></i>
+                            </a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -159,8 +159,11 @@
         </div>
         {% else %}
         <div class="text-center py-4">
-            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
-            <p class="text-muted mb-0">Aucun film en attente !</p>
+            <i class="fas fa-film fa-3x text-muted mb-3"></i>
+            <p class="text-muted mb-0">Aucun combo Livre+Film pour le moment.</p>
+            <a href="{{ url_for('cineclub.propose_film') }}" class="btn btn-danger mt-2">
+                <i class="fas fa-plus-circle"></i> Créer le premier combo
+            </a>
         </div>
         {% endif %}
     </div>

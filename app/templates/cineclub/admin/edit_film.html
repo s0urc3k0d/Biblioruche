@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Éditer le film - CinéBookClub{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('cineclub.index') }}">CinéBookClub</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('cineclub.admin_dashboard') }}">Administration</a></li>
+        <li class="breadcrumb-item active">Éditer le film</li>
+    </ol>
+</nav>
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-edit"></i> Éditer le combo Livre + Film</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <!-- Colonne gauche : Livre associé -->
+                        <div class="col-md-6">
+                            <h5 class="border-bottom pb-2 mb-3"><i class="fas fa-book text-primary"></i> Livre associé</h5>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Livre (adaptation) <span class="text-danger">*</span></label>
+                                <select name="book_proposal_id" class="form-select" required>
+                                    <option value="">-- Sélectionner un livre --</option>
+                                    {% for book in available_books %}
+                                    <option value="{{ book.id }}" 
+                                            {% if film.book_proposal_id == book.id %}selected{% endif %}>
+                                        {{ book.title }} - {{ book.author }}
+                                        {% if book.status == 'reading' %}(En lecture){% endif %}
+                                        {% if book.status == 'finished' %}(Terminé){% endif %}
+                                        {% if book.status == 'archived' %}(Archivé){% endif %}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-muted">Le livre dont ce film est l'adaptation</small>
+                            </div>
+                            
+                            <h5 class="border-bottom pb-2 mb-3 mt-4"><i class="fas fa-tv text-info"></i> Plateformes de streaming</h5>
+                            
+                            <div class="row">
+                                {% for key, platform in platforms.items() %}
+                                <div class="col-6 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="platforms" 
+                                               value="{{ key }}" id="platform_{{ key }}"
+                                               {% if key in selected_platforms %}checked{% endif %}>
+                                        <label class="form-check-label" for="platform_{{ key }}">
+                                            <span class="badge" style="background-color: {{ platform.color }};">
+                                                <i class="{{ platform.icon }}"></i>
+                                            </span>
+                                            {{ platform.name }}
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- Colonne droite : Infos film -->
+                        <div class="col-md-6">
+                            <h5 class="border-bottom pb-2 mb-3"><i class="fas fa-film text-danger"></i> Informations du film</h5>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Titre <span class="text-danger">*</span></label>
+                                <input type="text" name="title" class="form-control" required
+                                       value="{{ film.title }}">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Titre original</label>
+                                <input type="text" name="original_title" class="form-control"
+                                       value="{{ film.original_title or '' }}">
+                                <small class="text-muted">Si différent du titre français</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Réalisateur <span class="text-danger">*</span></label>
+                                <input type="text" name="director" class="form-control" required
+                                       value="{{ film.director }}">
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Année</label>
+                                        <input type="number" name="year" class="form-control" min="1895" max="2030"
+                                               value="{{ film.year or '' }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Durée (minutes)</label>
+                                        <input type="number" name="duration" class="form-control" min="1"
+                                               value="{{ film.duration or '' }}">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Genre</label>
+                                <input type="text" name="genre" class="form-control"
+                                       value="{{ film.genre or '' }}" placeholder="ex: Science-Fiction, Drame...">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Synopsis</label>
+                                <textarea name="synopsis" class="form-control" rows="4">{{ film.synopsis or '' }}</textarea>
+                            </div>
+                            
+                            <h5 class="border-bottom pb-2 mb-3 mt-4"><i class="fas fa-link text-secondary"></i> Liens</h5>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">URL de l'affiche</label>
+                                <input type="url" name="poster_url" class="form-control"
+                                       value="{{ film.poster_url or '' }}">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">URL IMDb</label>
+                                <input type="url" name="imdb_url" class="form-control"
+                                       value="{{ film.imdb_url or '' }}" placeholder="https://www.imdb.com/title/...">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">URL Bande-annonce</label>
+                                <input type="url" name="trailer_url" class="form-control"
+                                       value="{{ film.trailer_url or '' }}" placeholder="https://www.youtube.com/watch?v=...">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('cineclub.film_detail', film_id=film.id) }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Annuler
+                        </a>
+                        <div>
+                            <button type="button" class="btn btn-danger me-2" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                <i class="fas fa-trash"></i> Supprimer
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Enregistrer
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmation de suppression -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="fas fa-exclamation-triangle"></i> Confirmer la suppression</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer le film <strong>{{ film.title }}</strong> ?</p>
+                <p class="text-danger mb-0">Cette action est irréversible.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <form action="{{ url_for('cineclub.delete_film', film_id=film.id) }}" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Supprimer définitivement
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

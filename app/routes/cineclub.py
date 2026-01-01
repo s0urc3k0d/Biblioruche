@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Routes pour le module BiblioCinéClub
-Module activable/désactivable pour les sessions films communautaires
+Routes pour le module CinéBookClub
+Module activable/désactivable pour les combos Livre+Film (adaptations)
 """
 
 from functools import wraps
@@ -11,7 +11,7 @@ from flask_login import login_required, current_user
 from app import db, limiter
 from app.models import (
     CineClubSettings, Film, FilmVotingSession, FilmVoteOption, 
-    FilmVote, ViewingSession, ViewingParticipation
+    FilmVote, ViewingSession, ViewingParticipation, BookProposal
 )
 
 cineclub_bp = Blueprint('cineclub', __name__, url_prefix='/cineclub')
@@ -140,17 +140,31 @@ def film_detail(film_id):
 
 @cineclub_bp.route('/propose', methods=['GET', 'POST'])
 @login_required
+@admin_required  # Seuls les admins peuvent proposer des films (CinéBookClub)
 @cineclub_enabled
-@limiter.limit("5 per day")
 def propose_film():
-    """Proposer un nouveau film"""
+    """Proposer un nouveau film (admin uniquement) - CinéBookClub"""
+    # Récupérer les livres disponibles pour liaison
+    available_books = BookProposal.query.filter(
+        BookProposal.status.in_(['approved', 'reading', 'finished', 'archived'])
+    ).order_by(BookProposal.title).all()
+    
     if request.method == 'POST':
         title = request.form.get('title', '').strip()
         director = request.form.get('director', '').strip()
+        book_id = request.form.get('book_proposal_id', type=int)
         
         if not title or not director:
             flash('Le titre et le réalisateur sont obligatoires.', 'danger')
             return redirect(request.url)
+        
+        if not book_id:
+            flash('Vous devez associer le film à un livre (adaptation).', 'danger')
+            return redirect(request.url)
+        
+        # Récupérer les plateformes sélectionnées
+        platforms = request.form.getlist('platforms')
+        platforms_str = ','.join(platforms) if platforms else ''
         
         film = Film(
             title=title,
@@ -163,17 +177,21 @@ def propose_film():
             poster_url=request.form.get('poster_url', '').strip() or None,
             imdb_url=request.form.get('imdb_url', '').strip() or None,
             trailer_url=request.form.get('trailer_url', '').strip() or None,
+            book_proposal_id=book_id,
+            platforms=platforms_str,
             proposed_by=current_user.id,
-            status='pending'
+            status='approved'  # Directement approuvé car admin
         )
         
         db.session.add(film)
         db.session.commit()
         
-        flash('Votre proposition de film a été soumise !', 'success')
-        return redirect(url_for('cineclub.list_films'))
+        flash(f'Film "{film.title}" ajouté avec succès !', 'success')
+        return redirect(url_for('cineclub.film_detail', film_id=film.id))
     
-    return render_template('cineclub/propose_film.html')
+    return render_template('cineclub/propose_film.html', 
+                          available_books=available_books,
+                          platforms=Film.PLATFORMS)
 
 
 # =============================================================================
@@ -361,40 +379,34 @@ def unregister_viewing(viewing_id):
 @login_required
 @admin_required
 def admin_dashboard():
-    """Dashboard admin du CinéClub"""
+    """Dashboard admin du CinéBookClub"""
     settings = CineClubSettings.get_settings()
     
     # Stats
     stats = {
-        'total_films': Film.query.count(),
-        'pending_films': Film.query.filter_by(status='pending').count(),
+        'total_films': Film.query.filter(Film.status.in_(['approved', 'selected', 'viewed'])).count(),
         'active_votes': FilmVotingSession.query.filter_by(status='active').count(),
         'upcoming_viewings': ViewingSession.query.filter_by(status='upcoming').count()
     }
     
-    # Films en attente de modération
-    pending_films = Film.query.filter_by(status='pending').order_by(
-        Film.created_at.desc()
-    ).limit(10).all()
-    
     return render_template('cineclub/admin/dashboard.html',
                           settings=settings,
                           stats=stats,
-                          pending_films=pending_films)
+                          Film=Film)  # Passer le modèle pour les requêtes dans le template
 
 
 @cineclub_bp.route('/admin/toggle', methods=['POST'])
 @login_required
 @admin_required
 def toggle_cineclub():
-    """Activer/désactiver le module CinéClub"""
+    """Activer/désactiver le module CinéBookClub"""
     settings = CineClubSettings.get_settings()
     settings.is_enabled = not settings.is_enabled
     settings.updated_by = current_user.id
     db.session.commit()
     
     status = "activé" if settings.is_enabled else "désactivé"
-    flash(f'BiblioCinéClub {status} !', 'success')
+    flash(f'CinéBookClub {status} !', 'success')
     return redirect(url_for('cineclub.admin_dashboard'))
 
 
@@ -422,6 +434,74 @@ def reject_film(film_id):
     
     flash(f'Film "{film.title}" rejeté.', 'info')
     return redirect(url_for('cineclub.admin_dashboard'))
+
+
+@cineclub_bp.route('/admin/film/<int:film_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_film(film_id):
+    """Éditer un film existant"""
+    film = Film.query.get_or_404(film_id)
+    
+    # Récupérer les livres disponibles pour liaison
+    available_books = BookProposal.query.filter(
+        BookProposal.status.in_(['approved', 'reading', 'finished', 'archived'])
+    ).order_by(BookProposal.title).all()
+    
+    if request.method == 'POST':
+        title = request.form.get('title', '').strip()
+        director = request.form.get('director', '').strip()
+        book_id = request.form.get('book_proposal_id', type=int)
+        
+        if not title or not director:
+            flash('Le titre et le réalisateur sont obligatoires.', 'danger')
+            return redirect(request.url)
+        
+        # Récupérer les plateformes sélectionnées
+        platforms = request.form.getlist('platforms')
+        platforms_str = ','.join(platforms) if platforms else ''
+        
+        film.title = title
+        film.original_title = request.form.get('original_title', '').strip() or None
+        film.director = director
+        film.year = request.form.get('year', type=int) or None
+        film.genre = request.form.get('genre', '').strip() or None
+        film.duration = request.form.get('duration', type=int) or None
+        film.synopsis = request.form.get('synopsis', '').strip() or None
+        film.poster_url = request.form.get('poster_url', '').strip() or None
+        film.imdb_url = request.form.get('imdb_url', '').strip() or None
+        film.trailer_url = request.form.get('trailer_url', '').strip() or None
+        film.book_proposal_id = book_id
+        film.platforms = platforms_str
+        
+        db.session.commit()
+        
+        flash(f'Film "{film.title}" mis à jour !', 'success')
+        return redirect(url_for('cineclub.film_detail', film_id=film.id))
+    
+    # Pré-sélectionner les plateformes actuelles
+    selected_platforms = film.get_platforms_list() if film.platforms else []
+    
+    return render_template('cineclub/admin/edit_film.html', 
+                          film=film,
+                          available_books=available_books,
+                          platforms=Film.PLATFORMS,
+                          selected_platforms=selected_platforms)
+
+
+@cineclub_bp.route('/admin/film/<int:film_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_film(film_id):
+    """Supprimer un film"""
+    film = Film.query.get_or_404(film_id)
+    title = film.title
+    
+    db.session.delete(film)
+    db.session.commit()
+    
+    flash(f'Film "{title}" supprimé.', 'info')
+    return redirect(url_for('cineclub.list_films'))
 
 
 @cineclub_bp.route('/admin/vote/create', methods=['GET', 'POST'])

@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 
-{% block title %}{{ film.title }} - BiblioCinéClub{% endblock %}
+{% block title %}{{ film.title }} - CinéBookClub{% endblock %}
 
 {% block content %}
 <nav aria-label="breadcrumb" class="mb-4">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ url_for('cineclub.index') }}">CinéClub</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('cineclub.index') }}">CinéBookClub</a></li>
         <li class="breadcrumb-item"><a href="{{ url_for('cineclub.list_films') }}">Films</a></li>
         <li class="breadcrumb-item active">{{ film.title }}</li>
     </ol>
@@ -26,27 +26,40 @@
             <div class="card-body">
                 <!-- Statut -->
                 <div class="mb-3 text-center">
-                    {% if film.status == 'pending' %}
-                    <span class="badge bg-secondary fs-6"><i class="fas fa-clock"></i> En attente de validation</span>
-                    {% elif film.status == 'approved' %}
-                    <span class="badge bg-primary fs-6"><i class="fas fa-check"></i> Approuvé</span>
+                    {% if film.status == 'approved' %}
+                    <span class="badge bg-primary fs-6"><i class="fas fa-check"></i> Disponible</span>
                     {% elif film.status == 'selected' %}
-                    <span class="badge bg-warning text-dark fs-6"><i class="fas fa-star"></i> Sélectionné pour visionnage</span>
+                    <span class="badge bg-warning text-dark fs-6"><i class="fas fa-star"></i> Sélectionné</span>
                     {% elif film.status == 'viewed' %}
                     <span class="badge bg-success fs-6"><i class="fas fa-eye"></i> Visionné</span>
                     {% endif %}
                 </div>
                 
+                <!-- Plateformes de streaming -->
+                {% set platforms_display = film.get_platforms_display() %}
+                {% if platforms_display %}
+                <div class="mb-3">
+                    <h6 class="text-muted mb-2"><i class="fas fa-tv"></i> Disponible sur</h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for platform in platforms_display %}
+                        <span class="badge rounded-pill" style="background-color: {{ platform.color }}; color: white;">
+                            <i class="{{ platform.icon }}"></i> {{ platform.name }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
                 <!-- Liens externes -->
                 <div class="d-grid gap-2">
                     {% if film.trailer_url %}
                     <a href="{{ film.trailer_url }}" target="_blank" class="btn btn-danger">
-                        <i class="fab fa-youtube"></i> Voir la bande-annonce
+                        <i class="fab fa-youtube"></i> Bande-annonce
                     </a>
                     {% endif %}
                     {% if film.imdb_url %}
                     <a href="{{ film.imdb_url }}" target="_blank" class="btn btn-warning text-dark">
-                        <i class="fab fa-imdb"></i> Voir sur IMDb
+                        <i class="fab fa-imdb"></i> IMDb
                     </a>
                     {% endif %}
                 </div>
@@ -56,6 +69,33 @@
     
     <!-- Informations -->
     <div class="col-md-8">
+        <!-- Livre associé (CinéBookClub) -->
+        {% if film.book %}
+        <div class="card shadow mb-3 border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-book"></i> Adapté du livre</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    {% if film.book.cover_url %}
+                    <img src="{{ film.book.cover_url }}" alt="{{ film.book.title }}" class="me-3" style="height: 80px; width: auto;">
+                    {% endif %}
+                    <div>
+                        <h5 class="mb-1">
+                            <a href="{{ url_for('main.book_detail', book_id=film.book.id) }}" class="text-decoration-none">
+                                {{ film.book.title }}
+                            </a>
+                        </h5>
+                        <p class="mb-0 text-muted">
+                            <i class="fas fa-pen-fancy"></i> {{ film.book.author }}
+                            {% if film.book.publication_year %}({{ film.book.publication_year }}){% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
         <div class="card shadow">
             <div class="card-body">
                 <h1 class="card-title">{{ film.title }}</h1>
@@ -96,10 +136,10 @@
                 </div>
                 {% endif %}
                 
-                <!-- Proposé par -->
+                <!-- Ajouté par -->
                 <div class="mb-4">
                     <small class="text-muted">
-                        <i class="fas fa-user"></i> Proposé par 
+                        <i class="fas fa-user"></i> Ajouté par 
                         <a href="{{ url_for('main.user_profile', user_id=film.proposer.id) }}">
                             {{ film.proposer.display_name }}
                         </a>
@@ -141,15 +181,14 @@
                 <i class="fas fa-cog"></i> Administration
             </div>
             <div class="card-body">
-                {% if film.status == 'pending' %}
-                <form action="{{ url_for('cineclub.approve_film', film_id=film.id) }}" method="post" class="d-inline">
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-check"></i> Approuver
-                    </button>
-                </form>
+                <a href="{{ url_for('cineclub.edit_film', film_id=film.id) }}" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Éditer le film
+                </a>
+                
+                {% if film.status == 'approved' %}
                 <form action="{{ url_for('cineclub.reject_film', film_id=film.id) }}" method="post" class="d-inline">
-                    <button type="submit" class="btn btn-danger" onclick="return confirm('Rejeter ce film ?');">
-                        <i class="fas fa-times"></i> Rejeter
+                    <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Archiver ce film ?');">
+                        <i class="fas fa-archive"></i> Archiver
                     </button>
                 </form>
                 {% endif %}

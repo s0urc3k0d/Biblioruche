@@ -1,30 +1,63 @@
 {% extends "base.html" %}
 
-{% block title %}Proposer un film - BiblioCinéClub{% endblock %}
+{% block title %}Ajouter un film - CinéBookClub{% endblock %}
 
 {% block content %}
 <nav aria-label="breadcrumb" class="mb-4">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ url_for('cineclub.index') }}">CinéClub</a></li>
-        <li class="breadcrumb-item active">Proposer un film</li>
+        <li class="breadcrumb-item"><a href="{{ url_for('cineclub.index') }}">CinéBookClub</a></li>
+        <li class="breadcrumb-item active">Ajouter un film</li>
     </ol>
 </nav>
 
 <div class="row justify-content-center">
-    <div class="col-lg-8">
+    <div class="col-lg-10">
         <div class="card shadow">
             <div class="card-header bg-danger text-white">
-                <h4 class="mb-0"><i class="fas fa-film"></i> Proposer un film</h4>
+                <h4 class="mb-0"><i class="fas fa-film"></i> Ajouter un combo Livre + Film</h4>
             </div>
             <div class="card-body">
+                <div class="alert alert-info mb-4">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>CinéBookClub</strong> : Associez un film (adaptation) à un livre de la bibliothèque pour créer un combo lecture + visionnage !
+                </div>
+                
                 <form method="post">
+                    <!-- Association avec un livre (OBLIGATOIRE) -->
+                    <div class="card bg-light mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-book text-primary"></i> Livre associé <span class="text-danger">*</span></h5>
+                        </div>
+                        <div class="card-body">
+                            <select name="book_proposal_id" id="book_proposal_id" class="form-select form-select-lg" required>
+                                <option value="">-- Sélectionner le livre dont ce film est l'adaptation --</option>
+                                {% for book in available_books %}
+                                <option value="{{ book.id }}"
+                                        data-author="{{ book.author }}"
+                                        data-year="{{ book.publication_year or '' }}">
+                                    📚 {{ book.title }} - {{ book.author }}
+                                    {% if book.status == 'reading' %}(En lecture){% endif %}
+                                    {% if book.status == 'finished' %}(Terminé){% endif %}
+                                    {% if book.status == 'archived' %}(Archivé){% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                Ce film doit être une adaptation cinématographique d'un livre de notre bibliothèque.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Informations du film -->
+                    <h5 class="mb-3"><i class="fas fa-film text-danger"></i> Informations du film</h5>
+                    
                     <div class="row">
                         <div class="col-md-8 mb-3">
-                            <label for="title" class="form-label">Titre <span class="text-danger">*</span></label>
+                            <label for="title" class="form-label">Titre du film <span class="text-danger">*</span></label>
                             <input type="text" name="title" id="title" class="form-control" required maxlength="200">
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label for="year" class="form-label">Année</label>
+                            <label for="year" class="form-label">Année de sortie</label>
                             <input type="number" name="year" id="year" class="form-control" min="1888" max="2100">
                         </div>
                     </div>
@@ -75,6 +108,27 @@
                     
                     <hr class="my-4">
                     
+                    <!-- Plateformes de streaming -->
+                    <h5 class="mb-3"><i class="fas fa-tv text-info"></i> Disponible sur</h5>
+                    <p class="text-muted mb-3">Sélectionnez les plateformes où le film est disponible en streaming :</p>
+                    
+                    <div class="row mb-4">
+                        {% for key, platform in platforms.items() %}
+                        <div class="col-6 col-md-4 col-lg-3 mb-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" 
+                                       name="platforms" value="{{ key }}" id="platform_{{ key }}">
+                                <label class="form-check-label" for="platform_{{ key }}">
+                                    <i class="{{ platform.icon }}" style="color: {{ platform.color }}"></i>
+                                    {{ platform.name }}
+                                </label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <hr class="my-4">
+                    
                     <h5 class="mb-3"><i class="fas fa-link"></i> Liens (optionnels)</h5>
                     
                     <div class="mb-3">
@@ -101,7 +155,7 @@
                     
                     <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-danger btn-lg">
-                            <i class="fas fa-paper-plane"></i> Soumettre ma proposition
+                            <i class="fas fa-plus-circle"></i> Ajouter le combo Livre + Film
                         </button>
                         <a href="{{ url_for('cineclub.list_films') }}" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-left"></i> Annuler
@@ -118,4 +172,5 @@ document.getElementById('synopsis').addEventListener('input', function() {
     document.getElementById('synopsis-counter').textContent = this.value.length;
 });
 </script>
+{% endblock %}
 {% endblock %}

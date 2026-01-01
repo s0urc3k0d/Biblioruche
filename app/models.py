@@ -310,7 +310,7 @@ class CineClubSettings(db.Model):
 
 
 class Film(db.Model):
-    """Modèle pour les films proposés/votés"""
+    """Modèle pour les films proposés/votés - CinéBookClub (adaptations de livres)"""
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     original_title = db.Column(db.String(200))  # Titre original si étranger
@@ -323,13 +323,46 @@ class Film(db.Model):
     imdb_url = db.Column(db.String(500))
     trailer_url = db.Column(db.String(500))  # URL YouTube/autre
     
+    # Liaison avec le livre (CinéBookClub - adaptation)
+    book_proposal_id = db.Column(db.Integer, db.ForeignKey('book_proposal.id'), nullable=True)
+    book = db.relationship('BookProposal', backref='film_adaptations')
+    
+    # Plateformes de streaming disponibles (stockées en JSON)
+    # Format: "netflix,prime,disney" etc.
+    platforms = db.Column(db.String(500), default='')
+    
     # Métadonnées
     proposed_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    status = db.Column(db.String(20), default='pending', nullable=False)  # pending, approved, selected, viewed, archived
+    status = db.Column(db.String(20), default='approved', nullable=False)  # approved, selected, viewed, archived
     created_at = db.Column(db.DateTime, default=utc_now)
     
     # Relations
     proposer = db.relationship('User', backref='proposed_films')
+    
+    # Liste des plateformes disponibles
+    PLATFORMS = {
+        'netflix': {'name': 'Netflix', 'icon': 'fab fa-netflix', 'color': '#E50914'},
+        'prime': {'name': 'Prime Video', 'icon': 'fab fa-amazon', 'color': '#00A8E1'},
+        'disney': {'name': 'Disney+', 'icon': 'fas fa-plus', 'color': '#113CCF'},
+        'canal': {'name': 'Canal+', 'icon': 'fas fa-tv', 'color': '#000000'},
+        'ocs': {'name': 'OCS', 'icon': 'fas fa-film', 'color': '#FF6600'},
+        'apple': {'name': 'Apple TV+', 'icon': 'fab fa-apple', 'color': '#555555'},
+        'paramount': {'name': 'Paramount+', 'icon': 'fas fa-mountain', 'color': '#0064FF'},
+        'max': {'name': 'Max', 'icon': 'fas fa-play', 'color': '#002BE7'},
+        'autre': {'name': 'Autre', 'icon': 'fas fa-external-link-alt', 'color': '#6c757d'},
+    }
+    
+    def get_platforms_list(self):
+        """Retourne la liste des plateformes sous forme de liste"""
+        if not self.platforms:
+            return []
+        return [p.strip() for p in self.platforms.split(',') if p.strip()]
+    
+    def get_platforms_display(self):
+        """Retourne les infos des plateformes pour l'affichage"""
+        platforms_list = self.get_platforms_list()
+        return [self.PLATFORMS.get(p, {'name': p, 'icon': 'fas fa-tv', 'color': '#6c757d'}) 
+                for p in platforms_list if p in self.PLATFORMS]
     
     def get_duration_display(self):
         """Affiche la durée en format heures:minutes"""

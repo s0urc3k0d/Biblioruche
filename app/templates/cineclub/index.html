@@ -1,13 +1,16 @@
 {% extends "base.html" %}
 
-{% block title %}BiblioCinéClub - BiblioRuche{% endblock %}
+{% block title %}CinéBookClub - BiblioRuche{% endblock %}
 
 {% block content %}
 <div class="text-center mb-5">
-    <h1><i class="fas fa-film text-danger"></i> {{ settings.module_name or 'BiblioCinéClub' }}</h1>
+    <h1><i class="fas fa-film text-danger"></i> {{ settings.module_name or 'CinéBookClub' }}</h1>
     <p class="lead text-muted">
-        {{ settings.description or 'Découvrez des films ensemble et partagez vos impressions !' }}
+        {{ settings.description or 'Lisez le livre, regardez le film, partagez l\'expérience !' }}
     </p>
+    <div class="alert alert-info d-inline-block">
+        <i class="fas fa-lightbulb"></i> <strong>Concept :</strong> Un combo <i class="fas fa-book text-primary"></i> Livre + <i class="fas fa-film text-danger"></i> Film (adaptation) pour une expérience complète !
+    </div>
 </div>
 
 <!-- Votes actifs -->
@@ -30,7 +33,7 @@
                         <strong>Fin le :</strong> {{ vote.end_date.strftime('%d/%m/%Y à %H:%M') }}
                     </p>
                     <p class="mb-0">
-                        <i class="fas fa-film"></i> {{ vote.options|length }} films en compétition
+                        <i class="fas fa-film"></i> {{ vote.options|length }} combos en compétition
                     </p>
                 </div>
                 <div class="card-footer">
@@ -48,7 +51,7 @@
 <!-- Prochaines séances -->
 {% if upcoming_viewings %}
 <div class="mb-5">
-    <h2><i class="fas fa-calendar-alt text-success"></i> Prochaines séances</h2>
+    <h2><i class="fas fa-calendar-alt text-success"></i> Prochaines séances de débrief</h2>
     <div class="row">
         {% for viewing in upcoming_viewings %}
         <div class="col-md-4 mb-3">
@@ -60,6 +63,11 @@
                 {% endif %}
                 <div class="card-body">
                     <h5 class="card-title">{{ viewing.film.title }}</h5>
+                    {% if viewing.film.book %}
+                    <p class="text-primary mb-2">
+                        <i class="fas fa-book"></i> {{ viewing.film.book.title }}
+                    </p>
+                    {% endif %}
                     <p class="text-muted">
                         <i class="fas fa-user"></i> {{ viewing.film.director }}
                         {% if viewing.film.year %} ({{ viewing.film.year }}){% endif %}
@@ -88,12 +96,12 @@
 </div>
 {% endif %}
 
-<!-- Films récents -->
+<!-- Combos récents -->
 <div class="mb-5">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2><i class="fas fa-film text-info"></i> Films récemment ajoutés</h2>
+        <h2><i class="fas fa-film text-info"></i> Combos Livre+Film récents</h2>
         <a href="{{ url_for('cineclub.list_films') }}" class="btn btn-outline-primary">
-            Voir tous les films <i class="fas fa-arrow-right"></i>
+            Voir tous les combos <i class="fas fa-arrow-right"></i>
         </a>
     </div>
     
@@ -111,10 +119,28 @@
                 {% endif %}
                 <div class="card-body">
                     <h5 class="card-title">{{ film.title }}</h5>
+                    {% if film.book %}
+                    <p class="card-text text-primary small mb-2">
+                        <i class="fas fa-book"></i> {{ film.book.title }}
+                    </p>
+                    {% endif %}
                     <p class="card-text text-muted">
                         <i class="fas fa-user"></i> {{ film.director }}
                         {% if film.year %}<br><i class="fas fa-calendar"></i> {{ film.year }}{% endif %}
                     </p>
+                    {% set platforms_display = film.get_platforms_display() %}
+                    {% if platforms_display %}
+                    <div class="d-flex flex-wrap gap-1">
+                        {% for platform in platforms_display[:3] %}
+                        <span class="badge rounded-pill" style="background-color: {{ platform.color }}; font-size: 0.65em;">
+                            <i class="{{ platform.icon }}"></i>
+                        </span>
+                        {% endfor %}
+                        {% if platforms_display|length > 3 %}
+                        <span class="badge bg-secondary rounded-pill" style="font-size: 0.65em;">+{{ platforms_display|length - 3 }}</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
                 </div>
                 <div class="card-footer">
                     <a href="{{ url_for('cineclub.film_detail', film_id=film.id) }}" class="btn btn-outline-info btn-sm">
@@ -128,27 +154,24 @@
     {% else %}
     <div class="text-center py-5">
         <i class="fas fa-film fa-4x text-muted mb-3"></i>
-        <p class="text-muted">Aucun film pour le moment.</p>
+        <p class="text-muted">Aucun combo Livre+Film pour le moment.</p>
     </div>
     {% endif %}
 </div>
 
-<!-- Proposer un film -->
-{% if current_user.is_authenticated %}
+<!-- Admin: Ajouter un combo -->
+{% if current_user.is_authenticated and current_user.is_admin %}
 <div class="text-center py-4 bg-light rounded">
-    <h3>Vous avez un film à proposer ?</h3>
-    <p class="text-muted">Partagez vos suggestions avec la communauté !</p>
+    <h3><i class="fas fa-plus-circle"></i> Ajouter un combo Livre+Film</h3>
+    <p class="text-muted">Associez un livre de la bibliothèque à son adaptation cinématographique</p>
     <a href="{{ url_for('cineclub.propose_film') }}" class="btn btn-lg btn-danger">
-        <i class="fas fa-plus-circle"></i> Proposer un film
+        <i class="fas fa-plus-circle"></i> Créer un combo
     </a>
 </div>
-{% endif %}
 
-<!-- Admin -->
-{% if current_user.is_authenticated and current_user.is_admin %}
 <div class="mt-4 text-center">
     <a href="{{ url_for('cineclub.admin_dashboard') }}" class="btn btn-warning">
-        <i class="fas fa-cog"></i> Administration CinéClub
+        <i class="fas fa-cog"></i> Administration CinéBookClub
     </a>
 </div>
 {% endif %}
