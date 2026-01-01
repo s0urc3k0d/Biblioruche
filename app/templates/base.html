@@ -91,6 +91,13 @@
                                 <li><a class="dropdown-item" href="{{ url_for('admin.readings') }}">Lectures</a></li>
                                 <li><a class="dropdown-item" href="{{ url_for('admin.users') }}">Utilisateurs</a></li>
                                 <li><a class="dropdown-item" href="{{ url_for('admin.reviews') }}">Modération des avis</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('cineclub.admin_dashboard') }}">
+                                    <i class="fas fa-film text-danger"></i> Admin CinéClub
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('ebooks.admin_ebooks') }}">
+                                    <i class="fas fa-book text-info"></i> Admin Ebooks
+                                </a></li>
                             </ul>
                         </li>
                         {% endif %}
